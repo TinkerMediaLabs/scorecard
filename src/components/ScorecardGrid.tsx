@@ -18,6 +18,7 @@ type Props = {
   onAddPlayer: () => void;
   onAddRound: () => void;
   screenWidth: number;
+  bottomInset?: number;
 };
 
 const ROMAN: [number, string][] = [
@@ -48,6 +49,7 @@ export default function ScorecardGrid({
   onAddPlayer,
   onAddRound,
   screenWidth,
+  bottomInset = 0
 }: Props) {
   const cellWidth = (screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4);
 
@@ -85,8 +87,8 @@ export default function ScorecardGrid({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
+<View style={[styles.container, { paddingBottom: bottomInset, backgroundColor: '#fff' }]}>      
+  <View style={styles.headerRow}>
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
         <Animated.ScrollView ref={headerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           {players.map((p) => (

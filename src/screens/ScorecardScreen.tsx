@@ -2,20 +2,26 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { useCallback, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { RootStackParamList } from '../App';
 import ScorecardGrid from '../components/ScorecardGrid';
 import { loadScorecard, saveScorecard } from '../lib/storage';
 import { Scorecard } from '../types';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SettingsModal from '../components/SettingsModal';
+
 type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function ScorecardScreen({ route, navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { scorecardId } = route.params;
   const [card, setCard] = useState<Scorecard | null>(null);
+
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -41,6 +47,25 @@ export default function ScorecardScreen({ route, navigation }: Props) {
       r.id === roundId ? { ...r, scores: { ...r.scores, [playerId]: value } } : r
     );
     persist({ ...card, rounds });
+  };
+
+  const handleRenameCard = (name: string) => persist({ ...card, name });
+
+  const handleRenamePlayer = (playerId: string, name: string) => {
+    persist({ ...card, players: card.players.map((p) => (p.id === playerId ? { ...p, name } : p)) });
+  };
+
+  const handleDeletePlayer = (playerId: string) => {
+    const players = card.players.filter((p) => p.id !== playerId);
+    const rounds = card.rounds.map((r) => {
+      const { [playerId]: _removed, ...rest } = r.scores;
+      return { ...r, scores: rest };
+    });
+    persist({ ...card, players, rounds });
+  };
+
+  const handleUpdateSettings = (patch: Partial<Scorecard['settings']>) => {
+    persist({ ...card, settings: { ...card.settings, ...patch } });
   };
 
   const handleAddRound = () => {
@@ -78,15 +103,22 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toolbar}>
-        <Text style={styles.title} numberOfLines={1}>{card.name}</Text>
+    <View style={[styles.container, { paddingTop: insets.top  }]}>     
+     <View style={[styles.toolbar, {  }]}>
+  <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+    <Text style={{ fontSize: 20 }}>←</Text>
+  </Pressable>
+  <Text style={styles.title} numberOfLines={1}>{card.name}</Text>
+        <Pressable onPress={() => setSettingsVisible(true)} style={{ marginRight: 12 }}>
+  <Text style={{ fontSize: 20 }}>⚙️</Text>
+</Pressable>
         <TouchableOpacity onPress={finishScorecard} style={styles.finishButton}>
           <Text style={styles.finishText}>Finish</Text>
         </TouchableOpacity>
       </View>
 
       <ScorecardGrid
+        bottomInset={insets.bottom}
         players={card.players}
         rounds={card.rounds}
         totals={totals}
@@ -97,6 +129,18 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onAddPlayer={handleAddPlayer}
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
+      />
+
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        cardName={card.name}
+        onRenameCard={handleRenameCard}
+        players={card.players}
+        onRenamePlayer={handleRenamePlayer}
+        onDeletePlayer={handleDeletePlayer}
+        settings={card.settings}
+        onUpdateSettings={handleUpdateSettings}
       />
     </View>
   );

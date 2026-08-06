@@ -8,9 +8,14 @@ import { RootStackParamList } from '../App';
 import { loadAllScorecards, saveScorecard } from '../lib/storage';
 import { DEFAULT_SETTINGS, Scorecard } from '../types';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
+
+  const insets = useSafeAreaInsets();
+
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
 
   useFocusEffect(
@@ -42,9 +47,8 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Universal Scorecard</Text>
-
+<View style={[styles.container, { paddingTop: insets.top + 20 }]}>      
+  <Text style={styles.title}>Universal Scorecard</Text>
       <TouchableOpacity style={styles.newButton} onPress={createNewScorecard}>
         <Text style={styles.newButtonText}>+ New Scorecard</Text>
       </TouchableOpacity>
@@ -71,8 +75,16 @@ export default function HomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, paddingHorizontal: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: '700', marginBottom: 20 },
+  container: { 
+    flex: 1, 
+    paddingHorizontal: 20, 
+    backgroundColor: '#fff' 
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: '700', 
+    marginBottom: 20 
+  },
   newButton: {
     backgroundColor: '#155843',
     borderRadius: 12,
@@ -80,10 +92,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  newButtonText: { 
+    color: '#fff', 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
   list: { paddingBottom: 40 },
-  empty: { textAlign: 'center', color: '#888', marginTop: 40 },
-  card: { backgroundColor: '#f5f5f5', borderRadius: 10, padding: 16, marginBottom: 10 },
-  cardName: { fontSize: 16, fontWeight: '600' },
-  cardMeta: { fontSize: 13, color: '#666', marginTop: 4 },
+  empty: { 
+    textAlign: 'center', 
+    color: '#888', 
+    marginTop: 40 
+  },
+  card: { 
+    backgroundColor: '#f5f5f5', 
+    borderRadius: 10, 
+    padding: 16, 
+    marginBottom: 10 
+  },
+  cardName: { 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
+  cardMeta: { 
+    fontSize: 13, 
+    color: '#666', 
+    marginTop: 4 
+  },
 });
