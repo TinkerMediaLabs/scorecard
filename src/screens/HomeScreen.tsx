@@ -2,29 +2,34 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
-import { loadAllScorecards, saveScorecard } from '../lib/storage';
+import Text from '../components/AppText';
+import ScorecardListItem from '../components/ScorecardListItem';
+import { clearAllData, deleteScorecard, loadAllScorecards, saveScorecard } from '../lib/storage';
 import { DEFAULT_SETTINGS, Scorecard } from '../types';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
-
+  const [scorecards, setScorecards] = useState<Scorecard[]>([]);
   const insets = useSafeAreaInsets();
 
-  const [scorecards, setScorecards] = useState<Scorecard[]>([]);
+  const reload = useCallback(() => {
+    loadAllScorecards().then((cards) => {
+      const active = cards
+        .filter((c) => c.status === 'active')
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      setScorecards(active);
+    });
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadAllScorecards().then((cards) => {
-        cards.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-        setScorecards(cards);
-      });
-    }, [])
+      reload();
+    }, [reload])
   );
 
   const createNewScorecard = async () => {
@@ -46,9 +51,38 @@ export default function HomeScreen({ navigation }: Props) {
     navigation.navigate('Scorecard', { scorecardId: newCard.id });
   };
 
+  const handleDelete = async (id: string) => {
+    await deleteScorecard(id);
+    reload();
+  };
+
+  const handleClearAllData = () => {
+    Alert.alert(
+      'Clear All Data?',
+      'This permanently deletes every scorecard, in progress and finished. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Everything',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllData();
+            reload();
+          },
+        },
+      ]
+    );
+  };
+
   return (
-<View style={[styles.container, { paddingTop: insets.top + 20 }]}>      
-  <Text style={styles.title}>Universal Scorecard</Text>
+    <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Universal Scorecard</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('History')}>
+          <Text style={styles.historyLink}>History</Text>
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity style={styles.newButton} onPress={createNewScorecard}>
         <Text style={styles.newButtonText}>+ New Scorecard</Text>
       </TouchableOpacity>
@@ -59,63 +93,30 @@ export default function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={styles.empty}>No scorecards yet.</Text>}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
+          <ScorecardListItem
+            card={item}
             onPress={() => navigation.navigate('Scorecard', { scorecardId: item.id })}
-          >
-            <Text style={styles.cardName}>{item.name}</Text>
-            <Text style={styles.cardMeta}>
-              {item.status === 'finished' ? 'Finished' : 'In progress'} · {item.players.length} players
-            </Text>
-          </TouchableOpacity>
+            onDelete={() => handleDelete(item.id)}
+          />
         )}
       />
+
+      <TouchableOpacity onPress={handleClearAllData} style={styles.clearDataLink}>
+        <Text style={styles.clearDataText}>Clear All Data</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    paddingHorizontal: 20, 
-    backgroundColor: '#fff' 
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: '700', 
-    marginBottom: 20 
-  },
-  newButton: {
-    backgroundColor: '#155843',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  newButtonText: { 
-    color: '#fff', 
-    fontSize: 16, 
-    fontWeight: '600' 
-  },
-  list: { paddingBottom: 40 },
-  empty: { 
-    textAlign: 'center', 
-    color: '#888', 
-    marginTop: 40 
-  },
-  card: { 
-    backgroundColor: '#f5f5f5', 
-    borderRadius: 10, 
-    padding: 16, 
-    marginBottom: 10 
-  },
-  cardName: { 
-    fontSize: 16, 
-    fontWeight: '600' 
-  },
-  cardMeta: { 
-    fontSize: 13, 
-    color: '#666', 
-    marginTop: 4 
-  },
+  container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  title: { fontSize: 28, fontWeight: '700' },
+  historyLink: { fontSize: 15, fontWeight: '600', color: '#155843' },
+  newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 24 },
+  newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  list: { paddingBottom: 20 },
+  empty: { textAlign: 'center', color: '#888', marginTop: 40 },
+  clearDataLink: { alignItems: 'center', paddingVertical: 16 },
+  clearDataText: { fontSize: 13, color: '#c0392b' },
 });

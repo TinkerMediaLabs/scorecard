@@ -1,5 +1,7 @@
 export type ScorecardStatus = 'active' | 'finished';
 export type Theme = 'whiteboard' | 'midnight' | 'legalPad' | 'chalkboard';
+export type DoneSound = 'none' | 'ting' | 'rooster' | 'whistle' | 'doorbell' | 'airHorn' | 'trombone' | 'meepMeep' | 'tickTock' | 'bomb';
+export type TickerSound = 'none' | 'clock' | 'stopwatch' | 'grandfather' | 'waterTap' | 'blood' | 'warDrums';
 
 export interface Player {
   id: string;
@@ -16,6 +18,11 @@ export interface ScorecardSettings {
   showRoundWinner: boolean;
   useRomanNumerals: boolean;
   theme: Theme;
+  timerEnabled: boolean;
+  timerWarningEnabled: boolean;
+  timerRoundSeconds: number;
+  timerDoneSound: DoneSound;
+  timerTickerSound: TickerSound;
 }
 
 export interface Scorecard {
@@ -34,4 +41,9 @@ export const DEFAULT_SETTINGS: ScorecardSettings = {
   showRoundWinner: true,
   useRomanNumerals: true,
   theme: 'whiteboard',
+  timerEnabled: false,
+  timerWarningEnabled: false,
+  timerRoundSeconds: 60,
+  timerDoneSound: 'ting',
+  timerTickerSound: 'clock',
 };

@@ -1,6 +1,11 @@
 import { ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import Text from '../components/AppText';
+import TextInput from '../components/AppTextInput';
+
+import { DONE_SOUND_LABELS, DONE_SOUND_OPTIONS, TICKER_SOUND_LABELS, TICKER_SOUND_OPTIONS } from '../lib/sounds';
+import { THEMES, THEME_NAMES } from '../lib/themes';
 import { Player, ScorecardSettings } from '../types';
 
 type Props = {
@@ -66,6 +71,66 @@ export default function SettingsModal({
             <Row label="Use Roman numerals" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
             <Row label="Highlight round winner" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
           </Section>
+
+          <Section title="Theme">
+            <View style={styles.themeRow}>
+              {THEME_NAMES.map((name) => {
+                const palette = THEMES[name];
+                const selected = settings.theme === name;
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => onUpdateSettings({ theme: name })}
+                    style={[
+                      styles.themeSwatch,
+                      { backgroundColor: palette.background, borderColor: selected ? palette.accent : '#ddd' },
+                    ]}
+                  >
+                    <Text style={[styles.themeLabel, { color: palette.text }]}>{palette.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Section>
+
+          <Section title="Timer">
+            <Row label="Use Timer" value={settings.timerEnabled} onValueChange={(v) => onUpdateSettings({ timerEnabled: v })} />
+
+            {settings.timerEnabled && (
+              <>
+                <View style={[styles.playerRow, { justifyContent: 'space-between' }]}>
+                  <Text style={styles.rowLabel}>Round length (seconds)</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={String(settings.timerRoundSeconds)}
+                    onChangeText={(text) => {
+                      const n = parseInt(text, 10);
+                      if (!Number.isNaN(n)) onUpdateSettings({ timerRoundSeconds: n });
+                    }}
+                    style={[styles.textInput, { width: 60, textAlign: 'center' }]}
+                  />
+                </View>
+
+                <Row label="15 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => onUpdateSettings({ timerWarningEnabled: v })} />
+
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Completion Sound</Text>
+                <ChipPicker
+                  options={DONE_SOUND_OPTIONS}
+                  labels={DONE_SOUND_LABELS}
+                  value={settings.timerDoneSound}
+                  onChange={(v) => onUpdateSettings({ timerDoneSound: v })}
+                />
+
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Ticker Sound</Text>
+                <ChipPicker
+                  options={TICKER_SOUND_OPTIONS}
+                  labels={TICKER_SOUND_LABELS}
+                  value={settings.timerTickerSound}
+                  onChange={(v) => onUpdateSettings({ timerTickerSound: v })}
+                />
+              </>
+            )}
+          </Section>
         </ScrollView>
       </View>
     </Modal>
@@ -90,6 +155,31 @@ function Row({ label, value, onValueChange }: { label: string; value: boolean; o
   );
 }
 
+function ChipPicker<T extends string>({
+  options,
+  labels,
+  value,
+  onChange,
+}: {
+  options: T[];
+  labels: Record<T, string>;
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View style={styles.chipRow}>
+      {options.map((opt) => {
+        const selected = value === opt;
+        return (
+          <Pressable key={opt} onPress={() => onChange(opt)} style={[styles.chip, selected && styles.chipSelected]}>
+            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{labels[opt]}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingTop: 60 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 10 },
@@ -105,4 +195,12 @@ const styles = StyleSheet.create({
   deleteText: { color: '#d92121', fontSize: 13, fontWeight: '600' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
   rowLabel: { fontSize: 16 },
+  themeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  themeSwatch: { width: '47%', paddingVertical: 16, borderRadius: 10, borderWidth: 2, alignItems: 'center' },
+  themeLabel: { fontWeight: '600', fontSize: 13 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
+  chipSelected: { backgroundColor: '#155843', borderColor: '#155843' },
+  chipText: { fontSize: 13, color: '#333' },
+  chipTextSelected: { color: '#fff', fontWeight: '600' },
 });

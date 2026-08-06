@@ -1,8 +1,12 @@
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 
+import { ThemePalette } from '../lib/themes';
 import { Player, Round } from '../types';
+
+import Text from '../components/AppText';
+import TextInput from '../components/AppTextInput';
 
 const ROUND_COL_WIDTH = 56;
 const ROW_HEIGHT = 56;
@@ -14,6 +18,7 @@ type Props = {
   roundWinsCount: number[];
   leaderTotal: number;
   useRomanNumerals: boolean;
+  theme: ThemePalette;
   onScoreChange: (roundId: string, playerId: string, value: number | null) => void;
   onAddPlayer: () => void;
   onAddRound: () => void;
@@ -38,6 +43,32 @@ function toRoman(num: number): string {
   return result;
 }
 
+function createStyles(theme: ThemePalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    headerRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: theme.border },
+    footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: theme.border },
+    corner: { height: ROW_HEIGHT, backgroundColor: theme.surface },
+    headerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
+    headerText: { fontWeight: '600', fontSize: 14, color: theme.text },
+    roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderColor: theme.border },
+    roundText: { fontWeight: '600', color: theme.mutedText },
+    addCell: { alignItems: 'center', justifyContent: 'center' },
+    addText: { fontSize: 20, color: theme.accent },
+    body: { flex: 1, flexDirection: 'row' },
+    scoreCell: { alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1, borderColor: theme.border },
+    scoreText: { fontSize: 16, color: theme.text },
+    footerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
+    footerCellWinner: { backgroundColor: theme.accent },
+    footerTotal: { fontWeight: '700', fontSize: 16, color: theme.text },
+    footerWins: { fontSize: 11, color: theme.mutedText },
+    footerWinnerText: { color: theme.accentText },
+    modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
+    modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 200 },
+    modalInput: { fontSize: 40, textAlign: 'center', color: '#000' },
+  });
+}
+
 export default function ScorecardGrid({
   players,
   rounds,
@@ -45,12 +76,14 @@ export default function ScorecardGrid({
   roundWinsCount,
   leaderTotal,
   useRomanNumerals,
+  theme,
   onScoreChange,
   onAddPlayer,
   onAddRound,
   screenWidth,
-  bottomInset = 0
+  bottomInset = 0,
 }: Props) {
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const cellWidth = (screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4);
 
   const headerRef = useAnimatedRef<Animated.ScrollView>();
@@ -87,8 +120,8 @@ export default function ScorecardGrid({
   };
 
   return (
-<View style={[styles.container, { paddingBottom: bottomInset, backgroundColor: '#fff' }]}>      
-  <View style={styles.headerRow}>
+    <View style={[styles.container, { paddingBottom: bottomInset }]}>
+      <View style={styles.headerRow}>
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
         <Animated.ScrollView ref={headerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           {players.map((p) => (
@@ -166,27 +199,3 @@ export default function ScorecardGrid({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  headerRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#ddd' },
-  footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: '#ddd' },
-  corner: { height: ROW_HEIGHT, backgroundColor: '#f5f5f5' },
-  headerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: '#eee' },
-  headerText: { fontWeight: '600', fontSize: 14 },
-  roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', borderBottomWidth: 1, borderColor: '#eee' },
-  roundText: { fontWeight: '600', color: '#555' },
-  addCell: { alignItems: 'center', justifyContent: 'center' },
-  addText: { fontSize: 20, color: '#155843' },
-  body: { flex: 1, flexDirection: 'row' },
-  scoreCell: { alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1, borderColor: '#eee' },
-  scoreText: { fontSize: 16 },
-  footerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: '#eee' },
-  footerCellWinner: { backgroundColor: '#155843' },
-  footerTotal: { fontWeight: '700', fontSize: 16 },
-  footerWins: { fontSize: 11, color: '#666' },
-  footerWinnerText: { color: '#fff' },
-  modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
-  modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 200 },
-  modalInput: { fontSize: 40, textAlign: 'center' },
-});

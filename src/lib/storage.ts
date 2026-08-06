@@ -35,3 +35,7 @@ export async function deleteScorecard(id: string): Promise<void> {
   const index = await listScorecardIds();
   await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(index.filter((i) => i !== id)));
 }
+
+export async function clearAllData(): Promise<void> {
+  await AsyncStorage.clear();
+}
