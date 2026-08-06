@@ -44,7 +44,7 @@ export default function HomeScreen({ navigation }: Props) {
         { id: Crypto.randomUUID(), name: 'Player 1' },
         { id: Crypto.randomUUID(), name: 'Player 2' },
       ],
-      rounds: [{ id: Crypto.randomUUID(), scores: {} }],
+      rounds: [{ id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {} }],
       settings: DEFAULT_SETTINGS,
     };
     await saveScorecard(newCard);

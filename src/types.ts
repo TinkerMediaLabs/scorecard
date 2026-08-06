@@ -10,7 +10,9 @@ export interface Player {
 
 export interface Round {
   id: string;
-  scores: Record<string, number | null>; // playerId -> score for this round
+  scores: Record<string, number | null>;
+  bids: Record<string, number | null>;
+  melds: Record<string, number | null>;
 }
 
 export interface ScorecardSettings {
@@ -23,6 +25,8 @@ export interface ScorecardSettings {
   timerRoundSeconds: number;
   timerDoneSound: DoneSound;
   timerTickerSound: TickerSound;
+  bidEnabled: boolean;
+  meldEnabled: boolean;
 }
 
 export interface Scorecard {
@@ -46,4 +50,7 @@ export const DEFAULT_SETTINGS: ScorecardSettings = {
   timerRoundSeconds: 60,
   timerDoneSound: 'ting',
   timerTickerSound: 'clock',
+  bidEnabled: false,
+  meldEnabled: false,
+  
 };

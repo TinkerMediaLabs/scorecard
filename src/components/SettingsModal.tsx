@@ -94,6 +94,11 @@ export default function SettingsModal({
             <Row label="Lowest score wins" value={settings.lowestScoreWins} onValueChange={(v) => onUpdateSettings({ lowestScoreWins: v })} />
           </Section>
 
+          <Section title="Cell Options">
+            <Row label="Bid" value={settings.bidEnabled} onValueChange={(v) => onUpdateSettings({ bidEnabled: v })} />
+            <Row label="Meld" value={settings.meldEnabled} onValueChange={(v) => onUpdateSettings({ meldEnabled: v })} />
+          </Section>
+
           <Section title="Options">
             <Row label="Use Roman numerals" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
             <Row label="Highlight round winner" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />

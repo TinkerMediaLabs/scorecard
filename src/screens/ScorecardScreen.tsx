@@ -6,10 +6,8 @@ import { Alert, Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from
 import { PIConfetti } from 'react-native-fast-confetti';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import Text from '../components/AppText';
-
 import { RootStackParamList } from '../App';
-import RoundTimer from '../components/RoundTimer';
+import Text from '../components/AppText';
 import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
 import { loadScorecard, saveScorecard } from '../lib/storage';
@@ -43,57 +41,95 @@ export default function ScorecardScreen({ route, navigation }: Props) {
 
   const theme = THEMES[card.settings.theme];
 
-  const persist = (updated: Scorecard) => {
-    setCard(updated);
-    saveScorecard(updated);
+  const persist = (updater: (prev: Scorecard) => Scorecard) => {
+    setCard((prev) => {
+      if (!prev) return prev;
+      const updated = updater(prev);
+      saveScorecard(updated);
+      return updated;
+    });
   };
 
   const handleScoreChange = (roundId: string, playerId: string, value: number | null) => {
-    const rounds = card.rounds.map((r) =>
-      r.id === roundId ? { ...r, scores: { ...r.scores, [playerId]: value } } : r
-    );
-    persist({ ...card, rounds });
+    persist((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) =>
+        r.id === roundId ? { ...r, scores: { ...r.scores, [playerId]: value } } : r
+      ),
+    }));
+  };
+
+  const handleBidChange = (roundId: string, playerId: string, value: number | null) => {
+    persist((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) =>
+        r.id === roundId ? { ...r, bids: { ...r.bids, [playerId]: value } } : r
+      ),
+    }));
+  };
+
+  const handleMeldChange = (roundId: string, playerId: string, value: number | null) => {
+    persist((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) =>
+        r.id === roundId ? { ...r, melds: { ...r.melds, [playerId]: value } } : r
+      ),
+    }));
   };
 
   const handleAddRound = () => {
-    persist({ ...card, rounds: [...card.rounds, { id: Crypto.randomUUID(), scores: {} }] });
+    persist((prev) => ({
+      ...prev,
+      rounds: [...prev.rounds, { id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {} }],
+    }));
   };
 
   const handleAddPlayer = () => {
-    const newPlayer = { id: Crypto.randomUUID(), name: `Player ${card.players.length + 1}` };
-    persist({ ...card, players: [...card.players, newPlayer] });
+    persist((prev) => {
+      const newPlayer = { id: Crypto.randomUUID(), name: `Player ${prev.players.length + 1}` };
+      return { ...prev, players: [...prev.players, newPlayer] };
+    });
   };
 
-  const handleRenameCard = (name: string) => persist({ ...card, name });
+  const handleRenameCard = (name: string) => {
+    persist((prev) => ({ ...prev, name }));
+  };
 
   const handleRenamePlayer = (playerId: string, name: string) => {
-    persist({ ...card, players: card.players.map((p) => (p.id === playerId ? { ...p, name } : p)) });
+    persist((prev) => ({
+      ...prev,
+      players: prev.players.map((p) => (p.id === playerId ? { ...p, name } : p)),
+    }));
   };
 
   const handleDeletePlayer = (playerId: string) => {
-    const players = card.players.filter((p) => p.id !== playerId);
-    const rounds = card.rounds.map((r) => {
-      const { [playerId]: _removed, ...rest } = r.scores;
-      return { ...r, scores: rest };
+    persist((prev) => {
+      const players = prev.players.filter((p) => p.id !== playerId);
+      const rounds = prev.rounds.map((r) => {
+        const { [playerId]: _removed, ...rest } = r.scores;
+        return { ...r, scores: rest };
+      });
+      return { ...prev, players, rounds };
     });
-    persist({ ...card, players, rounds });
-  };
-
-  const handleShufflePlayers = () => {
-    const shuffled = [...card.players];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    persist({ ...card, players: shuffled });
-  };
-
-  const handleReorderPlayers = (players: Scorecard['players']) => {
-    persist({ ...card, players });
   };
 
   const handleUpdateSettings = (patch: Partial<Scorecard['settings']>) => {
-    persist({ ...card, settings: { ...card.settings, ...patch } });
+    persist((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
+  };
+
+  const handleShufflePlayers = () => {
+    persist((prev) => {
+      const shuffled = [...prev.players];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return { ...prev, players: shuffled };
+    });
+  };
+
+  const handleReorderPlayers = (players: Scorecard['players']) => {
+    persist((prev) => ({ ...prev, players }));
   };
 
   const totals = card.players.map((p) =>
@@ -123,7 +159,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         text: 'Finish',
         style: 'destructive',
         onPress: () => {
-          persist({ ...card, status: 'finished' });
+          persist((prev) => ({ ...prev, status: 'finished' }));
           setShowConfetti(true);
         },
       },
@@ -135,7 +171,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
       <View
         style={[
           styles.toolbar,
-          { paddingTop: insets.top, backgroundColor: theme.surface, borderBottomColor: theme.border },
+          { paddingTop: insets.top + 12, backgroundColor: theme.surface, borderBottomColor: theme.border },
         ]}
       >
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
@@ -150,19 +186,11 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {card.settings.timerEnabled && (
-        <RoundTimer
-          theme={theme}
-          roundSeconds={card.settings.timerRoundSeconds}
-          warningEnabled={card.settings.timerWarningEnabled}
-          doneSound={card.settings.timerDoneSound}
-          tickerSound={card.settings.timerTickerSound}
-        />
-      )}
-
       <ScorecardGrid
         bottomInset={insets.bottom}
         theme={theme}
+        bidEnabled={card.settings.bidEnabled}
+        meldEnabled={card.settings.meldEnabled}
         players={card.players}
         rounds={card.rounds}
         totals={totals}
@@ -170,6 +198,8 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         leaderTotal={leaderTotal}
         useRomanNumerals={card.settings.useRomanNumerals}
         onScoreChange={handleScoreChange}
+        onBidChange={handleBidChange}
+        onMeldChange={handleMeldChange}
         onAddPlayer={handleAddPlayer}
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
@@ -183,10 +213,10 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         players={card.players}
         onRenamePlayer={handleRenamePlayer}
         onDeletePlayer={handleDeletePlayer}
-        settings={card.settings}
-        onUpdateSettings={handleUpdateSettings}
         onShufflePlayers={handleShufflePlayers}
         onReorderPlayers={handleReorderPlayers}
+        settings={card.settings}
+        onUpdateSettings={handleUpdateSettings}
       />
 
       {showConfetti && (
