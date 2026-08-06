@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 
@@ -66,6 +66,9 @@ function createStyles(theme: ThemePalette) {
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
     modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 200 },
     modalInput: { fontSize: 40, textAlign: 'center', color: '#000' },
+    modalInputRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eee' },
+    signToggleText: { fontSize: 16, fontWeight: '700', color: '#000' },
   });
 }
 
@@ -84,8 +87,8 @@ export default function ScorecardGrid({
   bottomInset = 0,
 }: Props) {
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const cellWidth = (screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4);
-
+  const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4));
+  const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
   const headerRef = useAnimatedRef<Animated.ScrollView>();
   const footerRef = useAnimatedRef<Animated.ScrollView>();
   const columnRef = useAnimatedRef<Animated.ScrollView>();
@@ -103,8 +106,16 @@ export default function ScorecardGrid({
     },
   });
 
+  useEffect(() => {
+    headerRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+    footerRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+    columnRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+  }, []);
+
   const [editing, setEditing] = useState<{ roundId: string; playerId: string } | null>(null);
   const [draftValue, setDraftValue] = useState('');
+
+  const scoreInputRef = useRef<any>(null);
 
   const openEditor = (roundId: string, playerId: string, currentValue: number | null) => {
     setEditing({ roundId, playerId });
@@ -119,13 +130,16 @@ export default function ScorecardGrid({
     setEditing(null);
   };
 
+  const handleModalShow = () => {
+    setTimeout(() => scoreInputRef.current?.focus(), 50);
+  };
+
   return (
     <View style={[styles.container, { paddingBottom: bottomInset }]}>
       <View style={styles.headerRow}>
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
-        <Animated.ScrollView ref={headerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-          {players.map((p) => (
-            <View key={p.id} style={[styles.headerCell, { width: cellWidth }]}>
+          <Animated.ScrollView ref={headerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
+          {players.map((p) => (            <View key={p.id} style={[styles.headerCell, { width: cellWidth }]}>
               <Text style={styles.headerText} numberOfLines={1}>{p.name}</Text>
             </View>
           ))}
@@ -137,20 +151,19 @@ export default function ScorecardGrid({
 
       <View style={styles.body}>
         <Animated.ScrollView ref={columnRef} scrollEnabled={false} showsVerticalScrollIndicator={false} style={{ width: ROUND_COL_WIDTH }}>
-          {rounds.map((r, i) => (
-            <View key={r.id} style={[styles.roundCell, { height: ROW_HEIGHT }]}>
-              <Text style={styles.roundText}>{useRomanNumerals ? toRoman(i + 1) : i + 1}</Text>
-            </View>
-          ))}
-          <Pressable style={[styles.addCell, { height: ROW_HEIGHT }]} onPress={onAddRound}>
-            <Text style={styles.addText}>+</Text>
-          </Pressable>
+         {rounds.map((r, i) => (
+          <View key={r.id} style={[styles.roundCell, { height: ROW_HEIGHT, width: ROUND_COL_WIDTH }]}>
+            <Text style={styles.roundText}>{useRomanNumerals ? toRoman(i + 1) : i + 1}</Text>
+          </View>
+        ))}
+        <Pressable style={[styles.addCell, { height: ROW_HEIGHT, width: ROUND_COL_WIDTH }]} onPress={onAddRound}>
+          <Text style={styles.addText}>+</Text>
+        </Pressable>
         </Animated.ScrollView>
 
-        <Animated.ScrollView horizontal onScroll={onHorizontalScroll} scrollEventThrottle={16} showsHorizontalScrollIndicator={false}>
+        <Animated.ScrollView horizontal onScroll={onHorizontalScroll} scrollEventThrottle={16} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
           <Animated.ScrollView onScroll={onVerticalScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false}>
-            {rounds.map((round) => (
-              <View key={round.id} style={{ flexDirection: 'row', height: ROW_HEIGHT }}>
+            {rounds.map((round) => (              <View key={round.id} style={{ flexDirection: 'row', height: ROW_HEIGHT }}>
                 {players.map((p) => {
                   const value = round.scores[p.id] ?? null;
                   return (
@@ -169,9 +182,8 @@ export default function ScorecardGrid({
 
       <View style={styles.footerRow}>
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
-        <Animated.ScrollView ref={footerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-          {players.map((p, i) => {
-            const isWinner = totals[i] === leaderTotal;
+          <Animated.ScrollView ref={footerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
+          {players.map((p, i) => { const isWinner = totals[i] === leaderTotal;
             return (
               <View key={p.id} style={[styles.footerCell, { width: cellWidth }, isWinner && styles.footerCellWinner]}>
                 <Text style={[styles.footerTotal, isWinner && styles.footerWinnerText]}>{totals[i]}</Text>
@@ -182,18 +194,26 @@ export default function ScorecardGrid({
         </Animated.ScrollView>
       </View>
 
-      <Modal visible={editing !== null} transparent animationType="fade" onRequestClose={() => setEditing(null)}>
+      <Modal visible={editing !== null} transparent animationType="fade" onShow={handleModalShow} onRequestClose={() => setEditing(null)}>
         <Pressable style={styles.modalBackdrop} onPress={commitEditor}>
-          <View style={styles.modalCard}>
-            <TextInput
-              autoFocus
-              keyboardType="numbers-and-punctuation"
-              value={draftValue}
-              onChangeText={setDraftValue}
-              onSubmitEditing={commitEditor}
-              style={styles.modalInput}
-            />
-          </View>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalInputRow}>
+              <Pressable
+                onPress={() => setDraftValue((v) => (v.startsWith('-') ? v.slice(1) : v ? `-${v}` : '-'))}
+                style={styles.signToggle}
+              >
+                <Text style={styles.signToggleText}>+/-</Text>
+              </Pressable>
+              <TextInput
+                ref={scoreInputRef}
+                keyboardType="number-pad"
+                value={draftValue}
+                onChangeText={(text) => setDraftValue(text.replace(/[^0-9-]/g, ''))}
+                onSubmitEditing={commitEditor}
+                style={styles.modalInput}
+              />
+            </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </View>

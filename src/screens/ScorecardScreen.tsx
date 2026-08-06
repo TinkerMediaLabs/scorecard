@@ -79,6 +79,19 @@ export default function ScorecardScreen({ route, navigation }: Props) {
     persist({ ...card, players, rounds });
   };
 
+  const handleShufflePlayers = () => {
+    const shuffled = [...card.players];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    persist({ ...card, players: shuffled });
+  };
+
+  const handleReorderPlayers = (players: Scorecard['players']) => {
+    persist({ ...card, players });
+  };
+
   const handleUpdateSettings = (patch: Partial<Scorecard['settings']>) => {
     persist({ ...card, settings: { ...card.settings, ...patch } });
   };
@@ -172,6 +185,8 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onDeletePlayer={handleDeletePlayer}
         settings={card.settings}
         onUpdateSettings={handleUpdateSettings}
+        onShufflePlayers={handleShufflePlayers}
+        onReorderPlayers={handleReorderPlayers}
       />
 
       {showConfetti && (

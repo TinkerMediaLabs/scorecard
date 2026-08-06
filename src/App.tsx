@@ -9,6 +9,8 @@ import HistoryScreen from './screens/HistoryScreen';
 import HomeScreen from './screens/HomeScreen';
 import ScorecardScreen from './screens/ScorecardScreen';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 
 export type RootStackParamList = {
   Home: undefined;
@@ -34,14 +36,16 @@ useEffect(() => {
 }, [fontsLoaded]);
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Scorecard" component={ScorecardScreen} />
-          <Stack.Screen name="History" component={HistoryScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Scorecard" component={ScorecardScreen} />
+            <Stack.Screen name="History" component={HistoryScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

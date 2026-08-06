@@ -8,6 +8,9 @@ import { DONE_SOUND_LABELS, DONE_SOUND_OPTIONS, TICKER_SOUND_LABELS, TICKER_SOUN
 import { THEMES, THEME_NAMES } from '../lib/themes';
 import { Player, ScorecardSettings } from '../types';
 
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 type Props = {
   visible: boolean;
   onClose: () => void;
@@ -18,6 +21,8 @@ type Props = {
   onDeletePlayer: (playerId: string) => void;
   settings: ScorecardSettings;
   onUpdateSettings: (patch: Partial<ScorecardSettings>) => void;
+  onShufflePlayers: () => void;
+  onReorderPlayers: (players: Player[]) => void;
 };
 
 export default function SettingsModal({
@@ -30,6 +35,8 @@ export default function SettingsModal({
   onDeletePlayer,
   settings,
   onUpdateSettings,
+  onShufflePlayers,
+  onReorderPlayers,
 }: Props) {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -46,22 +53,42 @@ export default function SettingsModal({
             <TextInput value={cardName} onChangeText={onRenameCard} style={styles.textInput} />
           </Section>
 
-          <Section title="Players">
-            {players.map((p) => (
-              <View key={p.id} style={styles.playerRow}>
-                <TextInput
-                  value={p.name}
-                  onChangeText={(text) => onRenamePlayer(p.id, text)}
-                  style={[styles.textInput, styles.playerInput]}
-                />
-                {players.length > 2 && (
-                  <Pressable onPress={() => onDeletePlayer(p.id)} style={styles.deleteButton}>
-                    <Text style={styles.deleteText}>Remove</Text>
-                  </Pressable>
-                )}
-              </View>
-            ))}
-          </Section>
+<View style={styles.section}>
+  <View style={styles.playersHeaderRow}>
+    <Text style={styles.sectionTitle}>Players</Text>
+    <Pressable onPress={onShufflePlayers} style={styles.randomizeButton}>
+      <Text style={styles.randomizeButtonText}>🔀 Randomize</Text>
+    </Pressable>
+  </View>
+
+  <GestureHandlerRootView>
+    <DraggableFlatList
+      data={players}
+      scrollEnabled={false}
+      keyExtractor={(item) => item.id}
+      onDragEnd={({ data }) => onReorderPlayers(data)}
+      renderItem={({ item, drag, isActive }: RenderItemParams<Player>) => (
+        <ScaleDecorator>
+          <View style={[styles.playerRow, isActive && styles.playerRowActive]}>
+            <Pressable onLongPress={drag} hitSlop={10} style={styles.dragHandle}>
+              <Text style={styles.dragHandleIcon}>☰</Text>
+            </Pressable>
+            <TextInput
+              value={item.name}
+              onChangeText={(text) => onRenamePlayer(item.id, text)}
+              style={[styles.textInput, styles.playerInput]}
+            />
+            {players.length > 2 && (
+              <Pressable onPress={() => onDeletePlayer(item.id)} style={styles.deleteButton}>
+                <Text style={styles.deleteIcon}>🗑</Text>
+              </Pressable>
+            )}
+          </View>
+        </ScaleDecorator>
+      )}
+    />
+  </GestureHandlerRootView>
+</View>
 
           <Section title="Play Style">
             <Row label="Lowest score wins" value={settings.lowestScoreWins} onValueChange={(v) => onUpdateSettings({ lowestScoreWins: v })} />
@@ -203,4 +230,13 @@ const styles = StyleSheet.create({
   chipSelected: { backgroundColor: '#155843', borderColor: '#155843' },
   chipText: { fontSize: 13, color: '#333' },
   chipTextSelected: { color: '#fff', fontWeight: '600' },
+  shuffleButton: { alignSelf: 'flex-start', marginTop: 4, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#eee' },
+  shuffleButtonText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  playersHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  randomizeButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#eee' },
+  randomizeButtonText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  dragHandle: { paddingHorizontal: 6, paddingVertical: 4, marginRight: 8 },
+  dragHandleIcon: { fontSize: 18, color: '#999' },
+  deleteIcon: { fontSize: 16 },
+  playerRowActive: { opacity: 0.7 },
 });
