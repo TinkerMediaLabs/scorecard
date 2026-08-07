@@ -2,12 +2,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { useCallback, useState } from 'react';
-import { Alert, Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { PIConfetti } from 'react-native-fast-confetti';
+import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
+import FinishSummaryModal from '../components/FinishSummaryModal';
+import RoundTimer from '../components/RoundTimer';
 import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
 import { loadScorecard, saveScorecard } from '../lib/storage';
@@ -22,7 +23,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   const { scorecardId } = route.params;
   const [card, setCard] = useState<Scorecard | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
@@ -160,7 +161,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         style: 'destructive',
         onPress: () => {
           persist((prev) => ({ ...prev, status: 'finished' }));
-          setShowConfetti(true);
+          setShowSummary(true);
         },
       },
     ]);
@@ -181,10 +182,25 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         <Pressable onPress={() => setSettingsVisible(true)} style={{ marginRight: 12 }}>
           <Text style={{ fontSize: 20 }}>⚙️</Text>
         </Pressable>
-        <TouchableOpacity onPress={finishScorecard} style={[styles.finishButton, { backgroundColor: theme.accent }]}>
-          <Text style={[styles.finishText, { color: theme.accentText }]}>Finish</Text>
-        </TouchableOpacity>
+        <Pressable
+          onPress={card.status === 'finished' ? () => setShowSummary(true) : finishScorecard}
+          style={[styles.finishButton, { backgroundColor: card.status === 'finished' ? 'transparent' : theme.accent}]}
+        >
+          <Text style={[styles.finishText, { color: card.status === 'finished' ? theme.accent : theme.accentText }]}>
+            {card.status === 'finished' ? 'Completed' : 'Finish'}
+          </Text>
+        </Pressable>
       </View>
+
+      {card.settings.timerEnabled && (
+        <RoundTimer
+          theme={theme}
+          roundSeconds={card.settings.timerRoundSeconds}
+          warningEnabled={card.settings.timerWarningEnabled}
+          doneSound={card.settings.timerDoneSound}
+          tickerSound={card.settings.timerTickerSound}
+        />
+      )}
 
       <ScorecardGrid
         bottomInset={insets.bottom}
@@ -219,14 +235,16 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onUpdateSettings={handleUpdateSettings}
       />
 
-      {showConfetti && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <PIConfetti autoplay containerStyle={{ flex: 1 }} onAnimationEnd={() => navigation.goBack()}>
-            <PIConfetti.Origin blastPosition="center" count={200}>
-              <PIConfetti.Flake size={10} radius={3} />
-            </PIConfetti.Origin>
-          </PIConfetti>
-        </View>
+      {showSummary && (
+        <FinishSummaryModal
+          visible={showSummary}
+          onDone={() => setShowSummary(false)}
+          players={card.players}
+          totals={totals}
+          roundWinsCount={roundWinsCount}
+          roundsPlayed={card.rounds.length}
+          lowestScoreWins={card.settings.lowestScoreWins}
+        />
       )}
     </View>
   );
