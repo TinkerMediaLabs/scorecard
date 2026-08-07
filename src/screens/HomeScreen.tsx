@@ -7,14 +7,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
+import PresetEditorModal from '../components/PresetEditorModal';
+import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
-import { clearAllData, deleteScorecard, loadAllScorecards, saveScorecard } from '../lib/storage';
-import { DEFAULT_SETTINGS, Scorecard } from '../types';
+import {
+  clearAllData,
+  deletePreset,
+  deleteScorecard,
+  listPresets,
+  loadAllScorecards,
+  savePreset,
+  saveScorecard,
+} from '../lib/storage';
+import { DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [editorVisible, setEditorVisible] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const insets = useSafeAreaInsets();
 
   const reload = useCallback(() => {
@@ -24,6 +37,7 @@ export default function HomeScreen({ navigation }: Props) {
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
       setScorecards(active);
     });
+    listPresets().then(setPresets);
   }, []);
 
   useFocusEffect(
@@ -44,11 +58,49 @@ export default function HomeScreen({ navigation }: Props) {
         { id: Crypto.randomUUID(), name: 'Player 1' },
         { id: Crypto.randomUUID(), name: 'Player 2' },
       ],
-      rounds: [{ id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {} }],
+      rounds: [{ id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {}, bonuses: {}, customValues: {} }],
       settings: DEFAULT_SETTINGS,
     };
     await saveScorecard(newCard);
     navigation.navigate('Scorecard', { scorecardId: newCard.id });
+  };
+
+  const createFromPreset = async (preset: Preset) => {
+    const now = new Date().toISOString();
+    const newCard: Scorecard = {
+      id: Crypto.randomUUID(),
+      name: `${preset.name} — ${new Date().toLocaleDateString()}`,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      players: [
+        { id: Crypto.randomUUID(), name: 'Player 1' },
+        { id: Crypto.randomUUID(), name: 'Player 2' },
+      ],
+      rounds: [{ id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {}, bonuses: {}, customValues: {} }],
+      settings: preset.settings,
+      presetId: preset.id,
+    };
+    await saveScorecard(newCard);
+    navigation.navigate('Scorecard', { scorecardId: newCard.id });
+  };
+
+  const handleSavePreset = async ({ name, settings }: { name: string; settings: ScorecardSettings }) => {
+    const preset: Preset = {
+      id: editingPreset?.id ?? Crypto.randomUUID(),
+      name,
+      settings,
+      createdAt: editingPreset?.createdAt ?? new Date().toISOString(),
+    };
+    await savePreset(preset);
+    setEditorVisible(false);
+    setEditingPreset(null);
+    reload();
+  };
+
+  const handleDeletePreset = async (id: string) => {
+    await deletePreset(id);
+    reload();
   };
 
   const handleDelete = async (id: string) => {
@@ -87,6 +139,40 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.newButtonText}>+ New Scorecard</Text>
       </TouchableOpacity>
 
+      <View style={styles.presetsSection}>
+        <View style={styles.presetsHeaderRow}>
+          <Text style={styles.presetsTitle}>Presets</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setEditingPreset(null);
+              setEditorVisible(true);
+            }}
+          >
+            <Text style={styles.presetsAddLink}>+ New Preset</Text>
+          </TouchableOpacity>
+        </View>
+
+        {presets.length === 0 ? (
+          <Text style={styles.presetsEmpty}>
+            No presets yet — save one from a scorecard's Settings, or create one here.
+          </Text>
+        ) : (
+          presets.map((preset) => (
+            <PresetListItem
+              key={preset.id}
+              preset={preset}
+              onPress={() => createFromPreset(preset)}
+              onEdit={() => {
+                setEditingPreset(preset);
+                setEditorVisible(true);
+              }}
+              onDelete={() => handleDeletePreset(preset.id)}
+              onViewStats={() => navigation.navigate('PresetStats', { presetId: preset.id })}
+            />
+          ))
+        )}
+      </View>
+
       <FlatList
         data={scorecards}
         keyExtractor={(item) => item.id}
@@ -104,6 +190,17 @@ export default function HomeScreen({ navigation }: Props) {
       <TouchableOpacity onPress={handleClearAllData} style={styles.clearDataLink}>
         <Text style={styles.clearDataText}>Clear All Data</Text>
       </TouchableOpacity>
+
+      <PresetEditorModal
+        visible={editorVisible}
+        onClose={() => {
+          setEditorVisible(false);
+          setEditingPreset(null);
+        }}
+        onSave={handleSavePreset}
+        initialName={editingPreset?.name}
+        initialSettings={editingPreset?.settings}
+      />
     </View>
   );
 }
@@ -119,4 +216,9 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
   clearDataLink: { alignItems: 'center', paddingVertical: 16 },
   clearDataText: { fontSize: 13, color: '#c0392b' },
+  presetsSection: { marginBottom: 24 },
+  presetsHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  presetsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase' },
+  presetsAddLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
+  presetsEmpty: { fontSize: 13, color: '#888' },
 });

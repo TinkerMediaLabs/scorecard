@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,9 +12,10 @@ import FinishSummaryModal from '../components/FinishSummaryModal';
 import RoundTimer from '../components/RoundTimer';
 import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
-import { loadScorecard, saveScorecard } from '../lib/storage';
+import { loadScorecard, savePreset, saveScorecard } from '../lib/storage';
 import { THEMES } from '../lib/themes';
 import { Scorecard } from '../types';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
 
@@ -41,6 +43,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   }
 
   const theme = THEMES[card.settings.theme];
+  const darkTheme = card.settings.theme === 'chalkboard' || card.settings.theme === 'midnight';
 
   const persist = (updater: (prev: Scorecard) => Scorecard) => {
     setCard((prev) => {
@@ -78,10 +81,40 @@ export default function ScorecardScreen({ route, navigation }: Props) {
     }));
   };
 
+  const handleBonusChange = (roundId: string, playerId: string, value: number | null) => {
+    persist((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) =>
+        r.id === roundId ? { ...r, bonuses: { ...r.bonuses, [playerId]: value } } : r
+      ),
+    }));
+  };
+
+  const handleCustomValueChange = (
+    roundId: string,
+    playerId: string,
+    fieldIndex: number,
+    value: number | null
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) => {
+        if (r.id !== roundId) return r;
+        const existing = r.customValues?.[playerId] ?? [];
+        const nextValues = [...existing];
+        nextValues[fieldIndex] = value;
+        return { ...r, customValues: { ...r.customValues, [playerId]: nextValues } };
+      }),
+    }));
+  };
+
   const handleAddRound = () => {
     persist((prev) => ({
       ...prev,
-      rounds: [...prev.rounds, { id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {} }],
+      rounds: [
+        ...prev.rounds,
+        { id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {}, bonuses: {}, customValues: {} },
+      ],
     }));
   };
 
@@ -116,6 +149,16 @@ export default function ScorecardScreen({ route, navigation }: Props) {
 
   const handleUpdateSettings = (patch: Partial<Scorecard['settings']>) => {
     persist((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
+  };
+
+  const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['settings']) => {
+    await savePreset({
+      id: Crypto.randomUUID(),
+      name,
+      settings: settingsSnapshot,
+      createdAt: new Date().toISOString(),
+    });
+    Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
   };
 
   const handleShufflePlayers = () => {
@@ -169,6 +212,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar style={darkTheme ? 'light' : 'dark'} />
       <View
         style={[
           styles.toolbar,
@@ -207,6 +251,8 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         theme={theme}
         bidEnabled={card.settings.bidEnabled}
         meldEnabled={card.settings.meldEnabled}
+        bonusEnabled={card.settings.bonusEnabled}
+        customFields={card.settings.customFields}
         players={card.players}
         rounds={card.rounds}
         totals={totals}
@@ -216,6 +262,8 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onScoreChange={handleScoreChange}
         onBidChange={handleBidChange}
         onMeldChange={handleMeldChange}
+        onBonusChange={handleBonusChange}
+        onCustomValueChange={handleCustomValueChange}
         onAddPlayer={handleAddPlayer}
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
@@ -233,6 +281,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onReorderPlayers={handleReorderPlayers}
         settings={card.settings}
         onUpdateSettings={handleUpdateSettings}
+        onSaveAsPreset={handleSaveAsPreset}
       />
 
       {showSummary && (
@@ -244,6 +293,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
           roundWinsCount={roundWinsCount}
           roundsPlayed={card.rounds.length}
           lowestScoreWins={card.settings.lowestScoreWins}
+          rounds={card.rounds}
         />
       )}
     </View>

@@ -2,11 +2,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import HistoryScreen from './screens/HistoryScreen';
 import HomeScreen from './screens/HomeScreen';
+import PresetStatsScreen from './screens/PresetStatsScreen';
 import ScorecardScreen from './screens/ScorecardScreen';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -16,6 +18,7 @@ export type RootStackParamList = {
   Home: undefined;
   Scorecard: { scorecardId: string };
   History: undefined;
+  PresetStats: { presetId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,11 +41,13 @@ useEffect(() => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <StatusBar style="dark" />
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Scorecard" component={ScorecardScreen} />
             <Stack.Screen name="History" component={HistoryScreen} />
+            <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

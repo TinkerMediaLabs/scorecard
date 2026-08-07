@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import Text from '../components/AppText';
@@ -23,6 +23,7 @@ type Props = {
   onUpdateSettings: (patch: Partial<ScorecardSettings>) => void;
   onShufflePlayers: () => void;
   onReorderPlayers: (players: Player[]) => void;
+  onSaveAsPreset: (name: string, settings: ScorecardSettings) => void;
 };
 
 export default function SettingsModal({
@@ -37,7 +38,35 @@ export default function SettingsModal({
   onUpdateSettings,
   onShufflePlayers,
   onReorderPlayers,
+  onSaveAsPreset,
 }: Props) {
+  const [presetName, setPresetName] = useState('');
+  const [showPresetInput, setShowPresetInput] = useState(false);
+
+  const updateCustomField = (index: number, label: string) => {
+    const next = [...(settings.customFields ?? [])];
+    next[index] = label.slice(0, 8);
+    onUpdateSettings({ customFields: next });
+  };
+
+  const addCustomField = () => {
+    const current = settings.customFields ?? [];
+    if (current.length >= 3) return;
+    onUpdateSettings({ customFields: [...current, `Field ${current.length + 1}`] });
+  };
+
+  const removeCustomField = (index: number) => {
+    onUpdateSettings({ customFields: (settings.customFields ?? []).filter((_, i) => i !== index) });
+  };
+
+  const handleSavePreset = () => {
+    const trimmed = presetName.trim();
+    if (!trimmed) return;
+    onSaveAsPreset(trimmed, settings);
+    setPresetName('');
+    setShowPresetInput(false);
+  };
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
@@ -53,42 +82,42 @@ export default function SettingsModal({
             <TextInput value={cardName} onChangeText={onRenameCard} style={styles.textInput} />
           </Section>
 
-<View style={styles.section}>
-  <View style={styles.playersHeaderRow}>
-    <Text style={styles.sectionTitle}>Players</Text>
-    <Pressable onPress={onShufflePlayers} style={styles.randomizeButton}>
-      <Text style={styles.randomizeButtonText}>🔀 Randomize</Text>
-    </Pressable>
-  </View>
-
-  <GestureHandlerRootView>
-    <DraggableFlatList
-      data={players}
-      scrollEnabled={false}
-      keyExtractor={(item) => item.id}
-      onDragEnd={({ data }) => onReorderPlayers(data)}
-      renderItem={({ item, drag, isActive }: RenderItemParams<Player>) => (
-        <ScaleDecorator>
-          <View style={[styles.playerRow, isActive && styles.playerRowActive]}>
-            <Pressable onLongPress={drag} hitSlop={10} style={styles.dragHandle}>
-              <Text style={styles.dragHandleIcon}>☰</Text>
-            </Pressable>
-            <TextInput
-              value={item.name}
-              onChangeText={(text) => onRenamePlayer(item.id, text)}
-              style={[styles.textInput, styles.playerInput]}
-            />
-            {players.length > 2 && (
-              <Pressable onPress={() => onDeletePlayer(item.id)} style={styles.deleteButton}>
-                <Text style={styles.deleteIcon}>🗑</Text>
+          <View style={styles.section}>
+            <View style={styles.playersHeaderRow}>
+              <Text style={styles.sectionTitle}>Players</Text>
+              <Pressable onPress={onShufflePlayers} style={styles.randomizeButton}>
+                <Text style={styles.randomizeButtonText}>🔀 Randomize</Text>
               </Pressable>
-            )}
+            </View>
+
+            <GestureHandlerRootView>
+              <DraggableFlatList
+                data={players}
+                scrollEnabled={false}
+                keyExtractor={(item) => item.id}
+                onDragEnd={({ data }) => onReorderPlayers(data)}
+                renderItem={({ item, drag, isActive }: RenderItemParams<Player>) => (
+                  <ScaleDecorator>
+                    <View style={[styles.playerRow, isActive && styles.playerRowActive]}>
+                      <Pressable onLongPress={drag} hitSlop={10} style={styles.dragHandle}>
+                        <Text style={styles.dragHandleIcon}>☰</Text>
+                      </Pressable>
+                      <TextInput
+                        value={item.name}
+                        onChangeText={(text) => onRenamePlayer(item.id, text)}
+                        style={[styles.textInput, styles.playerInput]}
+                      />
+                      {players.length > 2 && (
+                        <Pressable onPress={() => onDeletePlayer(item.id)} style={styles.deleteButton}>
+                          <Text style={styles.deleteIcon}>🗑</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  </ScaleDecorator>
+                )}
+              />
+            </GestureHandlerRootView>
           </View>
-        </ScaleDecorator>
-      )}
-    />
-  </GestureHandlerRootView>
-</View>
 
           <Section title="Play Style">
             <Row label="Lowest score wins" value={settings.lowestScoreWins} onValueChange={(v) => onUpdateSettings({ lowestScoreWins: v })} />
@@ -97,6 +126,28 @@ export default function SettingsModal({
           <Section title="Cell Options">
             <Row label="Bid" value={settings.bidEnabled} onValueChange={(v) => onUpdateSettings({ bidEnabled: v })} />
             <Row label="Meld" value={settings.meldEnabled} onValueChange={(v) => onUpdateSettings({ meldEnabled: v })} />
+            <Row label="Bonus" value={settings.bonusEnabled} onValueChange={(v) => onUpdateSettings({ bonusEnabled: v })} />
+          </Section>
+
+          <Section title="Custom Fields">
+            {(settings.customFields ?? []).map((label, i) => (
+              <View key={i} style={styles.customFieldRow}>
+                <TextInput
+                  value={label}
+                  onChangeText={(text) => updateCustomField(i, text)}
+                  maxLength={8}
+                  style={[styles.textInput, styles.customFieldInput]}
+                />
+                <Pressable onPress={() => removeCustomField(i)} style={styles.deleteButton}>
+                  <Text style={styles.deleteIcon}>🗑</Text>
+                </Pressable>
+              </View>
+            ))}
+            {(settings.customFields ?? []).length < 3 && (
+              <Pressable onPress={addCustomField} style={styles.randomizeButton}>
+                <Text style={styles.randomizeButtonText}>+ Add Field</Text>
+              </Pressable>
+            )}
           </Section>
 
           <Section title="Options">
@@ -163,6 +214,27 @@ export default function SettingsModal({
               </>
             )}
           </Section>
+
+          <Section title="Save as Preset">
+            {showPresetInput ? (
+              <View style={styles.presetSaveRow}>
+                <TextInput
+                  value={presetName}
+                  onChangeText={setPresetName}
+                  placeholder="Preset name"
+                  style={[styles.textInput, styles.presetSaveInput]}
+                  autoFocus
+                />
+                <Pressable onPress={handleSavePreset} style={styles.presetSaveButton}>
+                  <Text style={styles.presetSaveButtonText}>Save</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable onPress={() => setShowPresetInput(true)} style={styles.randomizeButton}>
+                <Text style={styles.randomizeButtonText}>💾 Save Current Settings as Preset</Text>
+              </Pressable>
+            )}
+          </Section>
         </ScrollView>
       </View>
     </Modal>
@@ -182,7 +254,13 @@ function Row({ label, value, onValueChange }: { label: string; value: boolean; o
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onValueChange} />
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: '#ddd', true: '#155843' }}
+        thumbColor="#fff"
+        ios_backgroundColor="#ddd"
+      />
     </View>
   );
 }
@@ -244,4 +322,10 @@ const styles = StyleSheet.create({
   dragHandleIcon: { fontSize: 18, color: '#999' },
   deleteIcon: { fontSize: 16 },
   playerRowActive: { opacity: 0.7 },
+  customFieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  customFieldInput: { flex: 1, marginRight: 10 },
+  presetSaveRow: { flexDirection: 'row', alignItems: 'center' },
+  presetSaveInput: { flex: 1, marginRight: 10 },
+  presetSaveButton: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#155843' },
+  presetSaveButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 });

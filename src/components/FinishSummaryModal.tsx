@@ -3,15 +3,15 @@ import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { PIConfetti } from 'react-native-fast-confetti';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
-    Easing,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Player } from '../types';
+import { Player, Round } from '../types';
 import Text from './AppText';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -29,6 +29,7 @@ type Props = {
   roundWinsCount: number[];
   roundsPlayed: number;
   lowestScoreWins: boolean;
+  rounds: Round[];
 };
 
 export default function FinishSummaryModal({
@@ -39,6 +40,7 @@ export default function FinishSummaryModal({
   roundWinsCount,
   roundsPlayed,
   lowestScoreWins,
+  rounds,
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
@@ -83,6 +85,19 @@ export default function FinishSummaryModal({
       y: SCREEN_H * (0.15 + Math.random() * 0.55),
     }));
   }, [visible]);
+
+  const bestRoundScore = useMemo(() => {
+    let best: { value: number; playerName: string } | null = null;
+    for (const round of rounds) {
+      for (const p of players) {
+        const score = round.scores[p.id];
+        if (score == null) continue;
+        const better = best ? (lowestScoreWins ? score < best.value : score > best.value) : true;
+        if (better) best = { value: score, playerName: p.name };
+      }
+    }
+    return best;
+  }, [rounds, players, lowestScoreWins]);
 
   if (!visible || players.length === 0) return null;
 
@@ -165,6 +180,12 @@ export default function FinishSummaryModal({
                 <View style={styles.statTile}>
                   <Text style={styles.statValue}>{spread === null ? '—' : `${spread}%`}</Text>
                   <Text style={styles.statLabel}>Spread (1st to 2nd)</Text>
+                </View>
+                <View style={styles.statTile}>
+                  <Text style={styles.statValue}>{bestRoundScore ? bestRoundScore.value : '—'}</Text>
+                  <Text style={styles.statLabel}>
+                    Best Round{bestRoundScore ? ` (${bestRoundScore.playerName})` : ''}
+                  </Text>
                 </View>
               </View>
             </ScrollView>

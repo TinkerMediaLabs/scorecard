@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
@@ -20,9 +20,13 @@ type Props = {
   theme: ThemePalette;
   bidEnabled: boolean;
   meldEnabled: boolean;
+  bonusEnabled: boolean;
+  customFields: string[];
   onScoreChange: (roundId: string, playerId: string, value: number | null) => void;
   onBidChange: (roundId: string, playerId: string, value: number | null) => void;
   onMeldChange: (roundId: string, playerId: string, value: number | null) => void;
+  onBonusChange: (roundId: string, playerId: string, value: number | null) => void;
+  onCustomValueChange: (roundId: string, playerId: string, fieldIndex: number, value: number | null) => void;
   onAddPlayer: () => void;
   onAddRound: () => void;
   screenWidth: number;
@@ -79,6 +83,11 @@ function createStyles(theme: ThemePalette) {
     extraFieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
     extraFieldLabel: { fontSize: 14, fontWeight: '600', color: '#333' },
     extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: 20, textAlign: 'center', width: 80, color: '#000' },
+    modalTitle: { fontSize: 16, fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: 12 },
+    nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
+    nextButtonText: { fontWeight: '700', color: theme.accentText },
+    modalPlayerName: { fontSize: 14, color: '#888', textAlign: 'center', marginBottom: 12 },
+    modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginBottom: 16 },
   });
 }
 
@@ -92,9 +101,13 @@ export default function ScorecardGrid({
   theme,
   bidEnabled,
   meldEnabled,
+  bonusEnabled = false,
+  customFields = [],
   onScoreChange,
   onBidChange,
   onMeldChange,
+  onBonusChange,
+  onCustomValueChange,
   onAddPlayer,
   onAddRound,
   screenWidth,
@@ -103,7 +116,7 @@ export default function ScorecardGrid({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4));
   const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
-  const hasExtras = bidEnabled || meldEnabled;
+  const hasExtras = bidEnabled || meldEnabled || bonusEnabled || customFields.length > 0;
   const rowHeight = hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT;
 
   const headerRef = useAnimatedRef<Animated.ScrollView>();
@@ -133,6 +146,8 @@ export default function ScorecardGrid({
   const [draftScore, setDraftScore] = useState('');
   const [draftBid, setDraftBid] = useState('');
   const [draftMeld, setDraftMeld] = useState('');
+  const [draftBonus, setDraftBonus] = useState('');
+  const [draftCustom, setDraftCustom] = useState<string[]>([]);
   const scoreInputRef = useRef<any>(null);
 
   const openEditor = (
@@ -140,12 +155,16 @@ export default function ScorecardGrid({
     playerId: string,
     score: number | null,
     bid: number | null,
-    meld: number | null
+    meld: number | null,
+    bonus: number | null,
+    customValues: (number | null)[]
   ) => {
     setEditing({ roundId, playerId });
     setDraftScore(score == null ? '' : String(score));
     setDraftBid(bid == null ? '' : String(bid));
     setDraftMeld(meld == null ? '' : String(meld));
+    setDraftBonus(bonus == null ? '' : String(bonus));
+    setDraftCustom(customFields.map((_, i) => (customValues[i] == null ? '' : String(customValues[i]))));
   };
 
   const parseField = (text: string): number | null => {
@@ -155,16 +174,54 @@ export default function ScorecardGrid({
     return Number.isNaN(num) ? null : num;
   };
 
+  const commitCurrentFields = () => {
+    if (!editing) return;
+    onScoreChange(editing.roundId, editing.playerId, parseField(draftScore));
+    if (bidEnabled) onBidChange(editing.roundId, editing.playerId, parseField(draftBid));
+    if (meldEnabled) onMeldChange(editing.roundId, editing.playerId, parseField(draftMeld));
+    if (bonusEnabled) onBonusChange(editing.roundId, editing.playerId, parseField(draftBonus));
+    customFields.forEach((_, i) => {
+      onCustomValueChange(editing.roundId, editing.playerId, i, parseField(draftCustom[i] ?? ''));
+    });
+  };
+
   const commitEditor = () => {
-    if (editing) {
-      onScoreChange(editing.roundId, editing.playerId, parseField(draftScore));
-      if (bidEnabled) onBidChange(editing.roundId, editing.playerId, parseField(draftBid));
-      if (meldEnabled) onMeldChange(editing.roundId, editing.playerId, parseField(draftMeld));
-    }
+    commitCurrentFields();
     setEditing(null);
   };
 
   const handleModalShow = () => {
+    if (!hasExtras) {
+      setTimeout(() => scoreInputRef.current?.focus(), 50);
+    }
+  };
+
+  const currentPlayerIndex = editing ? players.findIndex((p) => p.id === editing.playerId) : -1;
+  const isLastPlayer = currentPlayerIndex === players.length - 1;
+  const editingRoundIndex = editing ? rounds.findIndex((r) => r.id === editing.roundId) : -1;
+  const editingPlayer = editing ? players.find((p) => p.id === editing.playerId) : undefined;
+  const modalTitle =
+    editingRoundIndex >= 0
+      ? `${useRomanNumerals ? toRoman(editingRoundIndex + 1) : editingRoundIndex + 1}`
+      : '';
+
+  const advanceToNextPlayer = () => {
+    if (!editing) return;
+    commitCurrentFields();
+
+    const round = rounds.find((r) => r.id === editing.roundId);
+    const nextPlayer = players[currentPlayerIndex + 1];
+    if (!round || !nextPlayer) return;
+
+    openEditor(
+      round.id,
+      nextPlayer.id,
+      round.scores[nextPlayer.id] ?? null,
+      round.bids?.[nextPlayer.id] ?? null,
+      round.melds?.[nextPlayer.id] ?? null,
+      round.bonuses?.[nextPlayer.id] ?? null,
+      round.customValues?.[nextPlayer.id] ?? []
+    );
     if (!hasExtras) {
       setTimeout(() => scoreInputRef.current?.focus(), 50);
     }
@@ -206,11 +263,13 @@ export default function ScorecardGrid({
                   const value = round.scores[p.id] ?? null;
                   const bidValue = round.bids?.[p.id] ?? null;
                   const meldValue = round.melds?.[p.id] ?? null;
+                  const bonusValue = round.bonuses?.[p.id] ?? null;
+                  const customValues = round.customValues?.[p.id] ?? [];
                   return (
                     <Pressable
                       key={p.id}
                       style={[styles.scoreCell, { width: cellWidth, height: rowHeight }]}
-                      onPress={() => openEditor(round.id, p.id, value, bidValue, meldValue)}
+                      onPress={() => openEditor(round.id, p.id, value, bidValue, meldValue, bonusValue, customValues)}
                     >
                       <Text style={styles.scoreText}>{value == null ? '' : value}</Text>
                       {hasExtras && (
@@ -227,6 +286,18 @@ export default function ScorecardGrid({
                               <Text style={styles.extrasValue}>{meldValue ?? '–'}</Text>
                             </View>
                           )}
+                          {bonusEnabled && (
+                            <View style={styles.extraField}>
+                              <Text style={styles.extrasLabel}>Bonus</Text>
+                              <Text style={styles.extrasValue}>{bonusValue ?? '–'}</Text>
+                            </View>
+                          )}
+                          {customFields.map((label, i) => (
+                            <View key={i} style={styles.extraField}>
+                              <Text style={styles.extrasLabel}>{label}</Text>
+                              <Text style={styles.extrasValue}>{customValues[i] ?? '–'}</Text>
+                            </View>
+                          ))}
                         </View>
                       )}
                     </Pressable>
@@ -256,52 +327,95 @@ export default function ScorecardGrid({
       </View>
 
       <Modal visible={editing !== null} transparent animationType="fade" onShow={handleModalShow} onRequestClose={() => setEditing(null)}>
-        <Pressable style={styles.modalBackdrop} onPress={commitEditor}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <View style={styles.modalInputRow}>
-              <Pressable
-                onPress={() => setDraftScore((v) => (v.startsWith('-') ? v.slice(1) : v ? `-${v}` : '-'))}
-                style={styles.signToggle}
-              >
-                <Text style={styles.signToggleText}>+/-</Text>
-              </Pressable>
-              <TextInput
-                ref={scoreInputRef}
-                keyboardType="number-pad"
-                value={draftScore}
-                onChangeText={(text) => setDraftScore(text.replace(/[^0-9-]/g, ''))}
-                onSubmitEditing={commitEditor}
-                placeholder="0"
-                placeholderTextColor="#cccccc"
-                style={styles.modalInput}
-              />
-            </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <Pressable style={styles.modalBackdrop} onPress={commitEditor}>
+            <Pressable style={styles.modalCard} onPress={() => {}}>
+              <Text style={styles.modalTitle}>{modalTitle}</Text>
 
-            {bidEnabled && (
-              <View style={styles.extraFieldRow}>
-                <Text style={styles.extraFieldLabel}>Bid</Text>
+              <Text style={styles.modalPlayerName}>{editingPlayer?.name}</Text>
+              <View style={styles.modalDivider} />
+
+              <View style={styles.modalInputRow}>
+                <Pressable
+                  onPress={() => setDraftScore((v) => (v.startsWith('-') ? v.slice(1) : v ? `-${v}` : '-'))}
+                  style={styles.signToggle}
+                >
+                  <Text style={styles.signToggleText}>+/-</Text>
+                </Pressable>
                 <TextInput
+                  ref={scoreInputRef}
                   keyboardType="number-pad"
-                  value={draftBid}
-                  onChangeText={(text) => setDraftBid(text.replace(/[^0-9]/g, ''))}
-                  style={styles.extraFieldInput}
+                  value={draftScore}
+                  onChangeText={(text) => setDraftScore(text.replace(/[^0-9-]/g, ''))}
+                  onSubmitEditing={commitEditor}
+                  placeholder="0"
+                  placeholderTextColor="#cccccc"
+                  style={styles.modalInput}
                 />
               </View>
-            )}
 
-            {meldEnabled && (
-              <View style={styles.extraFieldRow}>
-                <Text style={styles.extraFieldLabel}>Meld</Text>
-                <TextInput
-                  keyboardType="number-pad"
-                  value={draftMeld}
-                  onChangeText={(text) => setDraftMeld(text.replace(/[^0-9]/g, ''))}
-                  style={styles.extraFieldInput}
-                />
-              </View>
-            )}
+              {bidEnabled && (
+                <View style={styles.extraFieldRow}>
+                  <Text style={styles.extraFieldLabel}>Bid</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={draftBid}
+                    onChangeText={(text) => setDraftBid(text.replace(/[^0-9]/g, ''))}
+                    style={styles.extraFieldInput}
+                  />
+                </View>
+              )}
+
+              {meldEnabled && (
+                <View style={styles.extraFieldRow}>
+                  <Text style={styles.extraFieldLabel}>Meld</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={draftMeld}
+                    onChangeText={(text) => setDraftMeld(text.replace(/[^0-9]/g, ''))}
+                    style={styles.extraFieldInput}
+                  />
+                </View>
+              )}
+
+              {bonusEnabled && (
+                <View style={styles.extraFieldRow}>
+                  <Text style={styles.extraFieldLabel}>Bonus</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={draftBonus}
+                    onChangeText={(text) => setDraftBonus(text.replace(/[^0-9]/g, ''))}
+                    style={styles.extraFieldInput}
+                  />
+                </View>
+              )}
+
+              {customFields.map((label, i) => (
+                <View key={i} style={styles.extraFieldRow}>
+                  <Text style={styles.extraFieldLabel}>{label}</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={draftCustom[i] ?? ''}
+                    onChangeText={(text) =>
+                      setDraftCustom((prev) => {
+                        const next = [...prev];
+                        next[i] = text.replace(/[^0-9]/g, '');
+                        return next;
+                      })
+                    }
+                    style={styles.extraFieldInput}
+                  />
+                </View>
+              ))}
+
+              {!isLastPlayer && (
+                <Pressable style={styles.nextButton} onPress={advanceToNextPlayer}>
+                  <Text style={styles.nextButtonText}>Next Player →</Text>
+                </Pressable>
+              )}
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
