@@ -12,9 +12,10 @@ import FinishSummaryModal from '../components/FinishSummaryModal';
 import RoundTimer from '../components/RoundTimer';
 import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
-import { loadScorecard, savePreset, saveScorecard } from '../lib/storage';
+
+import { loadScorecard, recordPresetGameResult, savePreset, saveScorecard } from '../lib/storage';
 import { THEMES } from '../lib/themes';
-import { Scorecard } from '../types';
+import { DEFAULT_PRESET_STATS, Scorecard } from '../types';
 
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
@@ -152,14 +153,15 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   };
 
   const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['settings']) => {
-    await savePreset({
-      id: Crypto.randomUUID(),
-      name,
-      settings: settingsSnapshot,
-      createdAt: new Date().toISOString(),
-    });
-    Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
-  };
+      await savePreset({
+        id: Crypto.randomUUID(),
+        name,
+        settings: settingsSnapshot,
+        createdAt: new Date().toISOString(),
+        stats: DEFAULT_PRESET_STATS,
+      });
+      Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
+    };
 
   const handleShufflePlayers = () => {
     persist((prev) => {
@@ -204,6 +206,9 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         style: 'destructive',
         onPress: () => {
           persist((prev) => ({ ...prev, status: 'finished' }));
+          if (card.presetId) {
+            recordPresetGameResult(card.presetId, card);
+          }
           setShowSummary(true);
         },
       },

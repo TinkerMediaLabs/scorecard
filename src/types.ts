@@ -45,11 +45,35 @@ export interface Scorecard {
   presetId?: string;
 }
 
+export interface PresetGameRecord {
+  value: number;
+  playerName: string;
+  cardName: string;
+  date: string;
+}
+
+export interface PresetStats {
+  gamesPlayed: number;
+  totalWinningScore: number;
+  totalRounds: number;
+  highestTotal: PresetGameRecord | null;
+  bestRound: PresetGameRecord | null;
+}
+
+export const DEFAULT_PRESET_STATS: PresetStats = {
+  gamesPlayed: 0,
+  totalWinningScore: 0,
+  totalRounds: 0,
+  highestTotal: null,
+  bestRound: null,
+};
+
 export interface Preset {
   id: string;
   name: string;
   settings: ScorecardSettings;
   createdAt: string;
+  stats: PresetStats;
 }
 
 export const DEFAULT_SETTINGS: ScorecardSettings = {

@@ -6,80 +6,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
-import { listPresets, loadAllScorecards } from '../lib/storage';
+import { listPresets } from '../lib/storage';
 import { ThemePalette, THEMES } from '../lib/themes';
-import { Preset, Scorecard } from '../types';
+import { Preset, PresetGameRecord } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PresetStats'>;
-
-type GameRecord = {
-  value: number;
-  playerName: string;
-  cardName: string;
-  date: string;
-};
-
-function computeStats(cards: Scorecard[], lowestScoreWins: boolean) {
-  let highestTotal: GameRecord | null = null;
-  let bestRound: GameRecord | null = null;
-  let winningScoreSum = 0;
-  let roundsSum = 0;
-
-  for (const card of cards) {
-    const totals = card.players.map((p) =>
-      card.rounds.reduce((sum, r) => sum + (r.scores[p.id] ?? 0), 0)
-    );
-
-    card.players.forEach((p, i) => {
-      const total = totals[i];
-      if (!highestTotal || total > highestTotal.value) {
-        highestTotal = { value: total, playerName: p.name, cardName: card.name, date: card.updatedAt };
-      }
-    });
-
-    if (totals.length > 0) {
-      const gameBest = lowestScoreWins ? Math.min(...totals) : Math.max(...totals);
-      winningScoreSum += gameBest;
-    }
-    roundsSum += card.rounds.length;
-
-    for (const round of card.rounds) {
-      for (const p of card.players) {
-        const score = round.scores[p.id];
-        if (score == null) continue;
-        const isBetter = bestRound ? (lowestScoreWins ? score < bestRound.value : score > bestRound.value) : true;
-        if (isBetter) {
-          bestRound = { value: score, playerName: p.name, cardName: card.name, date: card.updatedAt };
-        }
-      }
-    }
-  }
-
-  return {
-    gamesPlayed: cards.length,
-    highestTotal,
-    bestRound,
-    averageWinningScore: cards.length ? Math.round(winningScoreSum / cards.length) : 0,
-    averageRounds: cards.length ? Math.round((roundsSum / cards.length) * 10) / 10 : 0,
-  };
-}
 
 export default function PresetStatsScreen({ route, navigation }: Props) {
   const { presetId } = route.params;
   const [preset, setPreset] = useState<Preset | null>(null);
-  const [games, setGames] = useState<Scorecard[]>([]);
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
       listPresets().then((presets) => {
         setPreset(presets.find((p) => p.id === presetId) ?? null);
-      });
-      loadAllScorecards().then((cards) => {
-        const finished = cards
-          .filter((c) => c.presetId === presetId && c.status === 'finished')
-          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-        setGames(finished);
       });
     }, [presetId])
   );
@@ -93,7 +34,9 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
   }
 
   const theme = THEMES[preset.settings.theme];
-  const stats = computeStats(games, preset.settings.lowestScoreWins);
+  const { stats } = preset;
+  const averageWinningScore = stats.gamesPlayed ? Math.round(stats.totalWinningScore / stats.gamesPlayed) : 0;
+  const averageRounds = stats.gamesPlayed ? Math.round((stats.totalRounds / stats.gamesPlayed) * 10) / 10 : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 16 }]}>
@@ -115,8 +58,8 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
           <>
             <View style={styles.statsGrid}>
               <StatTile theme={theme} value={String(stats.gamesPlayed)} label="Games Played" />
-              <StatTile theme={theme} value={String(stats.averageWinningScore)} label="Avg. Winning Score" />
-              <StatTile theme={theme} value={String(stats.averageRounds)} label="Avg. Rounds / Game" />
+              <StatTile theme={theme} value={String(averageWinningScore)} label="Avg. Winning Score" />
+              <StatTile theme={theme} value={String(averageRounds)} label="Avg. Rounds / Game" />
             </View>
 
             {stats.highestTotal && (
@@ -146,7 +89,7 @@ function StatTile({ theme, value, label }: { theme: ThemePalette; value: string;
   );
 }
 
-function RecordCard({ theme, title, record }: { theme: ThemePalette; title: string; record: GameRecord }) {
+function RecordCard({ theme, title, record }: { theme: ThemePalette; title: string; record: PresetGameRecord }) {
   return (
     <View style={[styles.recordCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <Text style={[styles.recordTitle, { color: theme.mutedText }]}>{title}</Text>

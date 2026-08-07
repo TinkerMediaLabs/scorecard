@@ -7,11 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
+import BottomSheetModal from '../components/BottomSheetModal';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
 import {
   clearAllData,
+  clearHistory,
   deletePreset,
   deleteScorecard,
   listPresets,
@@ -19,7 +21,7 @@ import {
   savePreset,
   saveScorecard,
 } from '../lib/storage';
-import { DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
+import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -28,6 +30,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [manageDataVisible, setManageDataVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
   const reload = useCallback(() => {
@@ -91,6 +95,7 @@ export default function HomeScreen({ navigation }: Props) {
       name,
       settings,
       createdAt: editingPreset?.createdAt ?? new Date().toISOString(),
+      stats: editingPreset?.stats ?? DEFAULT_PRESET_STATS,
     };
     await savePreset(preset);
     setEditorVisible(false);
@@ -108,10 +113,28 @@ export default function HomeScreen({ navigation }: Props) {
     reload();
   };
 
-  const handleClearAllData = () => {
+  const confirmClearHistory = () => {
+    Alert.alert(
+      'Clear History?',
+      'This permanently deletes every finished scorecard. Active scorecards and preset stats are unaffected. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear History',
+          style: 'destructive',
+          onPress: async () => {
+            await clearHistory();
+            reload();
+          },
+        },
+      ]
+    );
+  };
+
+  const confirmClearAllData = () => {
     Alert.alert(
       'Clear All Data?',
-      'This permanently deletes every scorecard, in progress and finished. This cannot be undone.',
+      'This permanently deletes every scorecard, preset, and stat. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -126,12 +149,12 @@ export default function HomeScreen({ navigation }: Props) {
     );
   };
 
-  return (
+return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Universal Scorecard</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('History')}>
-          <Text style={styles.historyLink}>History</Text>
+        <Text style={styles.title}>OmniScore</Text>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
+          <Text style={styles.menuIcon}>•••</Text>
         </TouchableOpacity>
       </View>
 
@@ -139,45 +162,51 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.newButtonText}>+ New Scorecard</Text>
       </TouchableOpacity>
 
-      <View style={styles.presetsSection}>
-        <View style={styles.presetsHeaderRow}>
-          <Text style={styles.presetsTitle}>Presets</Text>
-          <TouchableOpacity
-            onPress={() => {
-              setEditingPreset(null);
-              setEditorVisible(true);
-            }}
-          >
-            <Text style={styles.presetsAddLink}>+ New Preset</Text>
-          </TouchableOpacity>
-        </View>
-
-        {presets.length === 0 ? (
-          <Text style={styles.presetsEmpty}>
-            No presets yet — save one from a scorecard's Settings, or create one here.
-          </Text>
-        ) : (
-          presets.map((preset) => (
-            <PresetListItem
-              key={preset.id}
-              preset={preset}
-              onPress={() => createFromPreset(preset)}
-              onEdit={() => {
-                setEditingPreset(preset);
-                setEditorVisible(true);
-              }}
-              onDelete={() => handleDeletePreset(preset.id)}
-              onViewStats={() => navigation.navigate('PresetStats', { presetId: preset.id })}
-            />
-          ))
-        )}
-      </View>
-
       <FlatList
         data={scorecards}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          <>
+            <View style={styles.presetsSection}>
+              <View style={styles.presetsHeaderRow}>
+                <Text style={styles.presetsTitle}>Presets</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditingPreset(null);
+                    setEditorVisible(true);
+                  }}
+                >
+                  <Text style={styles.presetsAddLink}>+ New Preset</Text>
+                </TouchableOpacity>
+              </View>
+
+              {presets.length === 0 ? (
+                <Text style={styles.presetsEmpty}>
+                  No presets yet — save one from a scorecard's Settings, or create one here.
+                </Text>
+              ) : (
+                presets.map((preset) => (
+                  <PresetListItem
+                    key={preset.id}
+                    preset={preset}
+                    onPress={() => createFromPreset(preset)}
+                    onEdit={() => {
+                      setEditingPreset(preset);
+                      setEditorVisible(true);
+                    }}
+                    onDelete={() => handleDeletePreset(preset.id)}
+                    onViewStats={() => navigation.navigate('PresetStats', { presetId: preset.id })}
+                  />
+                ))
+              )}
+            </View>
+
+            <Text style={styles.scorecardsTitle}>Active Scorecards</Text>
+          </>
+        }
         ListEmptyComponent={<Text style={styles.empty}>No scorecards yet.</Text>}
+        ListFooterComponent={<View style={styles.footer}></View>}
         renderItem={({ item }) => (
           <ScorecardListItem
             card={item}
@@ -186,10 +215,6 @@ export default function HomeScreen({ navigation }: Props) {
           />
         )}
       />
-
-      <TouchableOpacity onPress={handleClearAllData} style={styles.clearDataLink}>
-        <Text style={styles.clearDataText}>Clear All Data</Text>
-      </TouchableOpacity>
 
       <PresetEditorModal
         visible={editorVisible}
@@ -201,7 +226,62 @@ export default function HomeScreen({ navigation }: Props) {
         initialName={editingPreset?.name}
         initialSettings={editingPreset?.settings}
       />
+
+      <BottomSheetModal visible={menuVisible} onClose={() => setMenuVisible(false)}>
+        <SheetOption
+          label="History"
+          onPress={() => {
+            setMenuVisible(false);
+            navigation.navigate('History');
+          }}
+        />
+        <SheetOption
+          label="Manage Data"
+          onPress={() => {
+            setMenuVisible(false);
+            setManageDataVisible(true);
+          }}
+          last
+        />
+      </BottomSheetModal>
+
+      <BottomSheetModal visible={manageDataVisible} onClose={() => setManageDataVisible(false)}>
+        <SheetOption
+          label="Clear History"
+          onPress={() => {
+            setManageDataVisible(false);
+            confirmClearHistory();
+          }}
+        />
+        <SheetOption
+          label="Clear All Data (Factory Reset)"
+          destructive
+          last
+          onPress={() => {
+            setManageDataVisible(false);
+            confirmClearAllData();
+          }}
+        />
+      </BottomSheetModal>
     </View>
+  );
+}
+
+function SheetOption({
+  label,
+  onPress,
+  destructive,
+  last,
+}: {
+  label: string;
+  onPress: () => void;
+  destructive?: boolean;
+  last?: boolean;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} style={[styles.sheetOption, last && styles.sheetOptionLast]}>
+      <Text style={[styles.sheetOptionText, destructive && styles.sheetOptionTextDestructive]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -209,16 +289,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   title: { fontSize: 28, fontWeight: '700' },
-  historyLink: { fontSize: 15, fontWeight: '600', color: '#155843' },
+  menuIcon: { fontSize: 22, fontWeight: '900', color: '#333', paddingHorizontal: 8, letterSpacing: 1 },
   newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 24 },
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   list: { paddingBottom: 20 },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
-  clearDataLink: { alignItems: 'center', paddingVertical: 16 },
-  clearDataText: { fontSize: 13, color: '#c0392b' },
   presetsSection: { marginBottom: 24 },
   presetsHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   presetsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase' },
   presetsAddLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
   presetsEmpty: { fontSize: 13, color: '#888' },
+  scorecardsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
+  sheetOption: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#eee' },
+  sheetOptionLast: { borderBottomWidth: 0 },
+  sheetOptionText: { fontSize: 16, fontWeight: '600', color: '#155843', textAlign: 'center' },
+  sheetOptionTextDestructive: { color: '#c0392b' },
+  footer: { height: 100 },
 });
