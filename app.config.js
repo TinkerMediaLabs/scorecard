@@ -14,8 +14,8 @@ const APP_NAME = {
 
 module.exports = {
   expo: {
-    name: APP_NAME,
-    slug: 'scorecard',
+    name: 'OmniScore',
+    slug: 'OmniScore',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
@@ -23,21 +23,21 @@ module.exports = {
     userInterfaceStyle: 'automatic',
     ios: {
       bundleIdentifier: BUNDLE_ID,
-      icon: './assets/expo.icon',
+      icon: './assets/icon.png',
     },
     android: {
       package: BUNDLE_ID,
       adaptiveIcon: {
         backgroundColor: '#E6F4FE',
-        foregroundImage: './assets/images/android-icon-foreground.png',
-        backgroundImage: './assets/images/android-icon-background.png',
-        monochromeImage: './assets/images/android-icon-monochrome.png',
+        foregroundImage: './assets/images/icon.png',
+        backgroundImage: './assets/images/icon.png',
+        monochromeImage: './assets/images/icon.png',
       },
       predictiveBackGestureEnabled: false,
     },
     web: {
       output: 'single',
-      favicon: './assets/images/favicon.png',
+      favicon: './assets/images/icon.png',
     },
     plugins: [
        "expo-audio",
@@ -45,8 +45,8 @@ module.exports = {
       [
         'expo-splash-screen',
         {
-          backgroundColor: '#208AEF',
-          image: './assets/images/splash-icon.png',
+          backgroundColor: '#fff',
+          image: './assets/images/icon.png',
           imageWidth: 76,
         },
       ],
