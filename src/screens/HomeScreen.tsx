@@ -1,8 +1,9 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Linking, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
@@ -160,12 +161,12 @@ const handleSavePreset = async ({
 
   const openPrivacyPolicy = () => {
     setMenuVisible(false);
-    Linking.openURL(PRIVACY_POLICY_URL);
+    WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
   };
 
   const openTermsOfUse = () => {
     setMenuVisible(false);
-    Linking.openURL(TERMS_OF_USE_URL);
+    WebBrowser.openBrowserAsync(TERMS_OF_USE_URL);
   };
 
 return (

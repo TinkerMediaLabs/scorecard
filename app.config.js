@@ -24,6 +24,7 @@ module.exports = {
     ios: {
       bundleIdentifier: BUNDLE_ID,
       icon: './assets/icon.png',
+      config: { usesNonExemptEncryption: false }
     },
     android: {
       package: BUNDLE_ID,
