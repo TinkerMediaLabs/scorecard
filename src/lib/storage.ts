@@ -1,14 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard } from '../types';
+import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings, WinCondition } from '../types';
 
 const INDEX_KEY = 'scorecards_index';
 const SCORECARD_PREFIX = 'scorecard_';
 const PRESETS_KEY = 'presets';
 
+function migrateSettings(rawSettings: any): ScorecardSettings {
+  const winCondition: WinCondition =
+    rawSettings?.winCondition ?? (rawSettings?.lowestScoreWins ? 'leastPoints' : 'mostPoints');
+  return { ...DEFAULT_SETTINGS, ...rawSettings, winCondition };
+}
+
 function hydrateScorecard(raw: Scorecard): Scorecard {
   return {
     ...raw,
-    settings: { ...DEFAULT_SETTINGS, ...raw.settings },
+    settings: migrateSettings(raw.settings),
     rounds: raw.rounds.map((r) => ({
       ...r,
       bids: r.bids ?? {},
@@ -22,7 +28,7 @@ function hydrateScorecard(raw: Scorecard): Scorecard {
 function hydratePreset(raw: Preset): Preset {
   return {
     ...raw,
-    settings: { ...DEFAULT_SETTINGS, ...raw.settings },
+    settings: migrateSettings(raw.settings),
     stats: { ...DEFAULT_PRESET_STATS, ...raw.stats },
     players:
       raw.players && raw.players.length > 0
@@ -103,10 +109,21 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
   if (index === -1) return;
 
   const preset = presets[index];
-  const lowestScoreWins = preset.settings.lowestScoreWins;
+  const winCondition = preset.settings.winCondition;
+  const lowestScoreWins = winCondition === 'leastPoints';
 
   const totals = card.players.map((p) =>
     card.rounds.reduce((sum, r) => sum + (r.scores[p.id] ?? 0), 0)
+  );
+
+  const roundWinsCount = card.players.map((_, playerIndex) =>
+    card.rounds.reduce((count, r) => {
+      const scores = card.players.map((p) => r.scores[p.id] ?? null);
+      const values = scores.filter((v): v is number => v !== null);
+      if (values.length === 0) return count;
+      const best = lowestScoreWins ? Math.min(...values) : Math.max(...values);
+      return scores[playerIndex] === best ? count + 1 : count;
+    }, 0)
   );
 
   let highestTotal = preset.stats.highestTotal;
@@ -137,7 +154,15 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
     }
   }
 
-  const gameWinningScore = totals.length ? (lowestScoreWins ? Math.min(...totals) : Math.max(...totals)) : 0;
+  let winningIndex = -1;
+  if (winCondition === 'mostRoundsWon') {
+    const maxWins = roundWinsCount.length ? Math.max(...roundWinsCount) : 0;
+    winningIndex = roundWinsCount.indexOf(maxWins);
+  } else if (totals.length) {
+    const best = lowestScoreWins ? Math.min(...totals) : Math.max(...totals);
+    winningIndex = totals.indexOf(best);
+  }
+  const gameWinningScore = winningIndex >= 0 ? totals[winningIndex] : 0;
 
   presets[index] = {
     ...preset,
