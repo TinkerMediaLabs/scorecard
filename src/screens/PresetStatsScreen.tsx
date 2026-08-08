@@ -73,8 +73,7 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
             {stats.bestRound && (
               <RecordCard
                 theme={theme}
-                title={preset.settings.lowestScoreWins ? 'Best (Lowest) Round Score' : 'Best (Highest) Round Score'}
-                record={stats.bestRound}
+                title={preset.settings.winCondition === 'leastPoints' ? 'Best (Lowest) Round Score' : 'Best (Highest) Round Score'}                record={stats.bestRound}
               />
             )}
           </>

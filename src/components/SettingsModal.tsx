@@ -12,6 +12,7 @@ import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-nativ
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
+import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
 
 type Props = {
   visible: boolean;
@@ -127,7 +128,12 @@ export default function SettingsModal({
           </View>
 
           <Section title="Play Style">
-            <Row label="Lowest score wins" value={settings.lowestScoreWins} onValueChange={(v) => onUpdateSettings({ lowestScoreWins: v })} />
+            <ChipPicker
+              options={WIN_CONDITION_OPTIONS}
+              labels={WIN_CONDITION_LABELS}
+              value={settings.winCondition}
+              onChange={(v) => onUpdateSettings({ winCondition: v })}
+            />
           </Section>
 
           <Section title="Cell Options">

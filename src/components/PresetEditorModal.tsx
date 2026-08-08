@@ -6,6 +6,7 @@ import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 
 import { THEMES, THEME_NAMES } from '../lib/themes';
+import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
 import { DEFAULT_SETTINGS, Player, ScorecardSettings } from '../types';
 
 type Props = {
@@ -133,7 +134,12 @@ export default function PresetEditorModal({
           </Section>
 
           <Section title="Play Style">
-            <Row label="Lowest score wins" value={settings.lowestScoreWins} onValueChange={(v) => updateSettings({ lowestScoreWins: v })} />
+            <ChipPicker
+              options={WIN_CONDITION_OPTIONS}
+              labels={WIN_CONDITION_LABELS}
+              value={settings.winCondition}
+              onChange={(v) => updateSettings({ winCondition: v })}
+            />
           </Section>
 
           <Section title="Cell Options">
@@ -237,6 +243,31 @@ function Row({ label, value, onValueChange }: { label: string; value: boolean; o
   );
 }
 
+function ChipPicker<T extends string>({
+  options,
+  labels,
+  value,
+  onChange,
+}: {
+  options: T[];
+  labels: Record<T, string>;
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View style={styles.chipRow}>
+      {options.map((opt) => {
+        const selected = value === opt;
+        return (
+          <Pressable key={opt} onPress={() => onChange(opt)} style={[styles.chip, selected && styles.chipSelected]}>
+            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{labels[opt]}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingTop: 60 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 10 },
@@ -260,4 +291,9 @@ const styles = StyleSheet.create({
   deleteIcon: { fontSize: 16 },
   addFieldButton: { alignSelf: 'flex-start', marginTop: 4, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#eee' },
   addFieldButtonText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
+  chipSelected: { backgroundColor: '#155843', borderColor: '#155843' },
+  chipText: { fontSize: 13, color: '#333' },
+  chipTextSelected: { color: '#fff', fontWeight: '600' },
 });

@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Player, Round } from '../types';
+import { Player, Round, WinCondition } from '../types';
 import Text from './AppText';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -28,7 +28,7 @@ type Props = {
   totals: number[];
   roundWinsCount: number[];
   roundsPlayed: number;
-  lowestScoreWins: boolean;
+  winCondition: WinCondition;
   rounds: Round[];
   showRoundWinner: boolean;
 };
@@ -40,12 +40,15 @@ export default function FinishSummaryModal({
   totals,
   roundWinsCount,
   roundsPlayed,
-  lowestScoreWins,
+  winCondition,
   rounds,
   showRoundWinner,
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
+
+  const isRoundsMode = winCondition === 'mostRoundsWon';
+  const lowestScoreWins = winCondition === 'leastPoints';
 
   useEffect(() => {
     if (visible) {
@@ -103,13 +106,14 @@ export default function FinishSummaryModal({
 
   if (!visible || players.length === 0) return null;
 
+  const leaderRoundWins = roundWinsCount.length ? Math.max(...roundWinsCount) : 0;
   const bestTotal = lowestScoreWins ? Math.min(...totals) : Math.max(...totals);
-  const winnerIndex = totals.indexOf(bestTotal);
+  const winnerIndex = isRoundsMode ? roundWinsCount.indexOf(leaderRoundWins) : totals.indexOf(bestTotal);
 
   const rest = players
     .map((p, i) => ({ player: p, total: totals[i], wins: roundWinsCount[i], index: i }))
     .filter((_, i) => i !== winnerIndex)
-    .sort((a, b) => (lowestScoreWins ? a.total - b.total : b.total - a.total));
+    .sort((a, b) => (isRoundsMode ? b.wins - a.wins : lowestScoreWins ? a.total - b.total : b.total - a.total));
 
   const totalPointsScored = totals.reduce((a, v) => a + v, 0);
   const mean = totals.length ? totalPointsScored / totals.length : 0;
@@ -154,17 +158,21 @@ export default function FinishSummaryModal({
                   <Text style={styles.winnerLabel}>WINNER</Text>
                   <Text style={styles.winnerName}>{players[winnerIndex]?.name}</Text>
                   <View style={styles.plaqueDivider} />
-                  <Text style={styles.winnerStat}>{totals[winnerIndex]} Points</Text>
-                  {/* {showRoundWinner && ( */}
-                    <Text style={styles.winnerStat}>{roundWinsCount[winnerIndex]} Rounds Won</Text>
-                  {/* )} */}
+                  {!isRoundsMode && (
+                    <Text style={styles.winnerStat}>{totals[winnerIndex]} Points</Text>
+                  )}
+                  {(isRoundsMode || showRoundWinner) && (
+                    <Text style={[styles.winnerStat, isRoundsMode && styles.winnerStatEmphasis]}>
+                      {roundWinsCount[winnerIndex]} Rounds Won
+                    </Text>
+                  )}
                 </View>
               </View>
 
               {rest.map((r) => (
                 <View key={r.player.id} style={styles.restRow}>
                   <Text style={styles.restName}>{r.player.name}</Text>
-                  <Text style={styles.restTotal}>{r.total} points</Text>
+                  <Text style={styles.restTotal}>{isRoundsMode ? `${r.wins} wins` : `${r.total} points`}</Text>
                 </View>
               ))}
 
@@ -231,6 +239,7 @@ const styles = StyleSheet.create({
   winnerName: { fontSize: 26, fontWeight: '800', color: '#3a2a00', marginTop: 4, textAlign: 'center' },
   plaqueDivider: { width: '60%', height: 1, backgroundColor: '#B8860B', marginVertical: 10 },
   winnerStat: { fontSize: 15, color: '#5c4600', fontWeight: '600' },
+  winnerStatEmphasis: { fontSize: 22, fontWeight: '800' },
   restRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#eee' },
   restName: { fontSize: 16 },
   restTotal: { fontSize: 16, color: '#555' },

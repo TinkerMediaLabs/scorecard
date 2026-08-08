@@ -5,7 +5,7 @@ import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 import { TEXT_SCALE } from '../lib/fonts';
 import { ThemePalette } from '../lib/themes';
-import { Player, Round, TextSize } from '../types';
+import { Player, Round, TextSize, WinCondition } from '../types';
 
 const ROUND_COL_WIDTH = 56;
 const ROW_HEIGHT = 56;
@@ -17,6 +17,7 @@ type Props = {
   totals: number[];
   roundWinsCount: number[];
   leaderTotal: number;
+  winCondition: WinCondition;
   useRomanNumerals: boolean;
   theme: ThemePalette;
   bidEnabled: boolean;
@@ -79,6 +80,7 @@ function createStyles(theme: ThemePalette, textScale: number) {
     footerCellWinner: { backgroundColor: theme.accent },
     footerTotal: { fontWeight: '700', fontSize: scaled(18), color: theme.text },
     footerWins: { fontSize: scaled(11), color: theme.mutedText },
+    footerWinsPrimary: { fontWeight: '700', fontSize: scaled(22), color: theme.text },
     footerWinnerText: { color: theme.accentText },
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
     modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 220 },
@@ -103,6 +105,7 @@ export default function ScorecardGrid({
   totals,
   roundWinsCount,
   leaderTotal,
+  winCondition = 'mostPoints',
   useRomanNumerals,
   theme,
   bidEnabled,
@@ -128,6 +131,8 @@ export default function ScorecardGrid({
   const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
   const hasExtras = bidEnabled || meldEnabled || bonusEnabled || customFields.length > 0;
   const rowHeight = Math.round((hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT) * textScale);
+  const isRoundsMode = winCondition === 'mostRoundsWon';
+  const leaderRoundWins = roundWinsCount.length ? Math.max(...roundWinsCount) : 0;
 
   const headerRef = useAnimatedRef<Animated.ScrollView>();
   const footerRef = useAnimatedRef<Animated.ScrollView>();
@@ -325,12 +330,22 @@ export default function ScorecardGrid({
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
         <Animated.ScrollView ref={footerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
           {players.map((p, i) => {
-            const isWinner = totals[i] === leaderTotal;
+            const isWinner = isRoundsMode
+              ? leaderRoundWins > 0 && roundWinsCount[i] === leaderRoundWins
+              : totals[i] === leaderTotal;
             return (
               <View key={p.id} style={[styles.footerCell, { width: cellWidth }, isWinner && styles.footerCellWinner]}>
-                <Text style={[styles.footerTotal, isWinner && styles.footerWinnerText]}>{totals[i]}</Text>
-                {showRoundWinner && (
-                  <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{roundWinsCount[i]} Wins</Text>
+                {!isRoundsMode && (
+                  <Text style={[styles.footerTotal, isWinner && styles.footerWinnerText]}>{totals[i]}</Text>
+                )}
+                {isRoundsMode ? (
+                  <Text style={[styles.footerWinsPrimary, isWinner && styles.footerWinnerText]}>
+                    {roundWinsCount[i]} Wins
+                  </Text>
+                ) : (
+                  showRoundWinner && (
+                    <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{roundWinsCount[i]} Wins</Text>
+                  )
                 )}
               </View>
             );

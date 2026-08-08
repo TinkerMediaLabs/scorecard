@@ -183,6 +183,11 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
     persist((prev) => ({ ...prev, players }));
   };
 
+  // "Most Rounds Won" determines the winner by round-win tally rather than points, but a round
+  // still needs a points-based winner to tally in the first place. We use the same lowest/highest
+  // direction as "Least Points"/"Most Points" for that per-round comparison.
+  const lowestScoreWins = card.settings.winCondition === 'leastPoints';
+
   const totals = card.players.map((p) =>
     card.rounds.reduce((sum, r) => sum + (r.scores[p.id] ?? 0), 0)
   );
@@ -192,13 +197,13 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
       const scores = card.players.map((p) => r.scores[p.id] ?? null);
       const values = scores.filter((v): v is number => v !== null);
       if (values.length === 0) return count;
-      const best = card.settings.lowestScoreWins ? Math.min(...values) : Math.max(...values);
+      const best = lowestScoreWins ? Math.min(...values) : Math.max(...values);
       return scores[playerIndex] === best ? count + 1 : count;
     }, 0)
   );
 
   const leaderTotal = totals.length
-    ? card.settings.lowestScoreWins
+    ? lowestScoreWins
       ? Math.min(...totals)
       : Math.max(...totals)
     : 0;
@@ -268,6 +273,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         totals={totals}
         roundWinsCount={roundWinsCount}
         leaderTotal={leaderTotal}
+        winCondition={card.settings.winCondition}
         useRomanNumerals={card.settings.useRomanNumerals}
         onScoreChange={handleScoreChange}
         onBidChange={handleBidChange}
@@ -305,7 +311,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
           totals={totals}
           roundWinsCount={roundWinsCount}
           roundsPlayed={card.rounds.length}
-          lowestScoreWins={card.settings.lowestScoreWins}
+          winCondition={card.settings.winCondition}
           rounds={card.rounds}
           showRoundWinner={card.settings.showRoundWinner}
         />

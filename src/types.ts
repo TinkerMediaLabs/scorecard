@@ -3,6 +3,7 @@ export type Theme = 'whiteboard' | 'midnight' | 'legalPad' | 'chalkboard';
 export type DoneSound = 'none' | 'ting' | 'rooster' | 'whistle' | 'doorbell' | 'airHorn' | 'trombone' | 'meepMeep' | 'tickTock' | 'bomb';
 export type TickerSound = 'none' | 'clock' | 'stopwatch' | 'grandfather' | 'waterTap' | 'blood' | 'warDrums';
 export type TextSize = 'standard' | 'large' | 'extraLarge';
+export type WinCondition = 'mostPoints' | 'leastPoints' | 'mostRoundsWon';
 
 export interface Player {
   id: string;
@@ -19,7 +20,7 @@ export interface Round {
 }
 
 export interface ScorecardSettings {
-  lowestScoreWins: boolean;
+  winCondition: WinCondition;
   showRoundWinner: boolean;
   useRomanNumerals: boolean;
   theme: Theme;
@@ -82,7 +83,7 @@ export interface Preset {
 }
 
 export const DEFAULT_SETTINGS: ScorecardSettings = {
-  lowestScoreWins: false,
+  winCondition: 'mostPoints',
   showRoundWinner: true,
   useRomanNumerals: true,
   theme: 'whiteboard',
