@@ -3,8 +3,9 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } fr
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
+import { TEXT_SCALE } from '../lib/fonts';
 import { ThemePalette } from '../lib/themes';
-import { Player, Round } from '../types';
+import { Player, Round, TextSize } from '../types';
 
 const ROUND_COL_WIDTH = 56;
 const ROW_HEIGHT = 56;
@@ -32,6 +33,7 @@ type Props = {
   screenWidth: number;
   bottomInset?: number;
   showRoundWinner: boolean;
+  textSize: TextSize;
 };
 
 const ROMAN: [number, string][] = [
@@ -51,43 +53,46 @@ function toRoman(num: number): string {
   return result;
 }
 
-function createStyles(theme: ThemePalette) {
+function createStyles(theme: ThemePalette, textScale: number) {
+  const scaled = (size: number) => Math.round(size * textScale);
+  const scaledRowHeight = scaled(ROW_HEIGHT);
+
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     headerRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: theme.border },
     footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: theme.border },
-    corner: { height: ROW_HEIGHT, backgroundColor: theme.surface },
-    headerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
-    headerText: { fontWeight: '700', fontSize: 14, color: theme.text },
+    corner: { height: scaledRowHeight, backgroundColor: theme.surface },
+    headerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
+    headerText: { fontWeight: '700', fontSize: scaled(14), color: theme.text },
     roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderColor: theme.border },
-    roundText: { fontWeight: '600', color: theme.mutedText },
+    roundText: { fontWeight: '600', fontSize: scaled(14), color: theme.mutedText },
     addCell: { alignItems: 'center', justifyContent: 'center' },
     addText: { fontSize: 20, color: theme.accent },
     body: { flex: 1, flexDirection: 'row' },
     scoreCell: { alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1, borderColor: theme.border },
-    scoreText: { fontSize: 16, color: theme.text },
+    scoreText: { fontSize: scaled(16), color: theme.text },
     extrasRow: { flexDirection: 'row', marginTop: 2, gap: 14 },
     extraField: { alignItems: 'center' },
-    extrasLabel: { fontSize: 9, color: '#aaaaaa' },
-    extrasValue: { fontSize: 10, color: '#aaaaaa', fontWeight: '600' },
-    footerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
+    extrasLabel: { fontSize: scaled(9), color: '#aaaaaa' },
+    extrasValue: { fontSize: scaled(10), color: '#aaaaaa', fontWeight: '600' },
+    footerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
     footerCellWinner: { backgroundColor: theme.accent },
-    footerTotal: { fontWeight: '700', fontSize: 18, color: theme.text },
-    footerWins: { fontSize: 11, color: theme.mutedText },
+    footerTotal: { fontWeight: '700', fontSize: scaled(18), color: theme.text },
+    footerWins: { fontSize: scaled(11), color: theme.mutedText },
     footerWinnerText: { color: theme.accentText },
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
     modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 220 },
     modalInputRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-    modalInput: { fontSize: 40, textAlign: 'center', color: '#000', width: 120 },
+    modalInput: { fontSize: scaled(40), textAlign: 'center', color: '#000', width: 120 },
     signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eee' },
-    signToggleText: { fontSize: 16, fontWeight: '700', color: '#000' },
+    signToggleText: { fontSize: scaled(16), fontWeight: '700', color: '#000' },
     extraFieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
-    extraFieldLabel: { fontSize: 14, fontWeight: '600', color: '#333' },
-    extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: 20, textAlign: 'center', width: 80, color: '#000' },
-    modalTitle: { fontSize: 16, fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: 12 },
+    extraFieldLabel: { fontSize: scaled(14), fontWeight: '600', color: '#333' },
+    extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: scaled(20), textAlign: 'center', width: 80, color: '#000' },
+    modalTitle: { fontSize: scaled(16), fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: 12 },
     nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
     nextButtonText: { fontWeight: '700', color: theme.accentText },
-    modalPlayerName: { fontSize: 14, color: '#888', textAlign: 'center', marginBottom: 12 },
+    modalPlayerName: { fontSize: scaled(14), color: '#888', textAlign: 'center', marginBottom: 12 },
     modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginBottom: 16 },
   });
 }
@@ -114,12 +119,15 @@ export default function ScorecardGrid({
   screenWidth,
   bottomInset = 0,
   showRoundWinner,
+  textSize = 'standard',
 }: Props) {
-  const styles = useMemo(() => createStyles(theme), [theme]);
-  const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4));
+  const textScale = TEXT_SCALE[textSize] ?? 1;
+  const styles = useMemo(() => createStyles(theme, textScale), [theme, textScale]);
+  const maxVisibleColumns = textSize === 'extraLarge' ? 3 : 4;
+  const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), maxVisibleColumns));
   const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
   const hasExtras = bidEnabled || meldEnabled || bonusEnabled || customFields.length > 0;
-  const rowHeight = hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT;
+  const rowHeight = Math.round((hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT) * textScale);
 
   const headerRef = useAnimatedRef<Animated.ScrollView>();
   const footerRef = useAnimatedRef<Animated.ScrollView>();

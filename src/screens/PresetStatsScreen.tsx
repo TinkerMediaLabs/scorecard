@@ -62,8 +62,12 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
               <StatTile theme={theme} value={String(averageRounds)} label="Avg. Rounds / Game" />
             </View>
 
-            {stats.highestTotal && (
+           {stats.highestTotal && (
               <RecordCard theme={theme} title="Most Points Scored" record={stats.highestTotal} />
+            )}
+
+            {stats.lowestTotal && (
+              <RecordCard theme={theme} title="Lowest Points Scored" record={stats.lowestTotal} />
             )}
 
             {stats.bestRound && (

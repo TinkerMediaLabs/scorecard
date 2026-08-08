@@ -156,16 +156,17 @@ const handleDeletePlayer = (playerId: string) => {
     persist((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
   };
 
-  const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['settings']) => {
-      await savePreset({
-        id: Crypto.randomUUID(),
-        name,
-        settings: settingsSnapshot,
-        createdAt: new Date().toISOString(),
-        stats: DEFAULT_PRESET_STATS,
-      });
-      Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
-    };
+const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['settings']) => {
+    await savePreset({
+      id: Crypto.randomUUID(),
+      name,
+      settings: settingsSnapshot,
+      players: card.players.map((p) => ({ id: p.id, name: p.name })),
+      createdAt: new Date().toISOString(),
+      stats: DEFAULT_PRESET_STATS,
+    });
+    Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
+  };
 
   const handleShufflePlayers = () => {
     persist((prev) => {
@@ -277,6 +278,7 @@ const handleDeletePlayer = (playerId: string) => {
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
         showRoundWinner={card.settings.showRoundWinner}
+        textSize={card.settings.textSize}
       />
 
       <SettingsModal

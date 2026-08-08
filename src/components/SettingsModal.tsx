@@ -11,6 +11,8 @@ import { Player, ScorecardSettings } from '../types';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
+
 type Props = {
   visible: boolean;
   onClose: () => void;
@@ -88,7 +90,7 @@ export default function SettingsModal({
             <View style={styles.playersHeaderRow}>
               <Text style={styles.sectionTitle}>Players</Text>
               <Pressable onPress={onShufflePlayers} style={styles.randomizeButton}>
-                <Text style={styles.randomizeButtonText}>Randomize</Text>
+                <Text style={styles.randomizeButtonText}>Randomize Order</Text>
               </Pressable>
             </View>
 
@@ -158,6 +160,15 @@ export default function SettingsModal({
           <Section title="Options">
             <Row label="Roman numeral rounds" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
             <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
+          </Section>
+
+          <Section title="Text Size">
+            <ChipPicker
+              options={TEXT_SIZE_OPTIONS}
+              labels={TEXT_SIZE_LABELS}
+              value={settings.textSize}
+              onChange={(v) => onUpdateSettings({ textSize: v })}
+            />
           </Section>
 
           <Section title="Theme">

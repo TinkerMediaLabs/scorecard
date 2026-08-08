@@ -2,6 +2,7 @@ export type ScorecardStatus = 'active' | 'finished';
 export type Theme = 'whiteboard' | 'midnight' | 'legalPad' | 'chalkboard';
 export type DoneSound = 'none' | 'ting' | 'rooster' | 'whistle' | 'doorbell' | 'airHorn' | 'trombone' | 'meepMeep' | 'tickTock' | 'bomb';
 export type TickerSound = 'none' | 'clock' | 'stopwatch' | 'grandfather' | 'waterTap' | 'blood' | 'warDrums';
+export type TextSize = 'standard' | 'large' | 'extraLarge';
 
 export interface Player {
   id: string;
@@ -31,6 +32,7 @@ export interface ScorecardSettings {
   meldEnabled: boolean;
   bonusEnabled: boolean;
   customFields: string[];
+  textSize: TextSize;
 }
 
 export interface Scorecard {
@@ -57,6 +59,7 @@ export interface PresetStats {
   totalWinningScore: number;
   totalRounds: number;
   highestTotal: PresetGameRecord | null;
+  lowestTotal: PresetGameRecord | null;
   bestRound: PresetGameRecord | null;
 }
 
@@ -65,6 +68,7 @@ export const DEFAULT_PRESET_STATS: PresetStats = {
   totalWinningScore: 0,
   totalRounds: 0,
   highestTotal: null,
+  lowestTotal: null,
   bestRound: null,
 };
 
@@ -74,6 +78,7 @@ export interface Preset {
   settings: ScorecardSettings;
   createdAt: string;
   stats: PresetStats;
+  players: Player[];
 }
 
 export const DEFAULT_SETTINGS: ScorecardSettings = {
@@ -90,4 +95,5 @@ export const DEFAULT_SETTINGS: ScorecardSettings = {
   meldEnabled: false,
   bonusEnabled: false,
   customFields: [],
+  textSize: 'standard',
 };

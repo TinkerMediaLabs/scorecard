@@ -23,7 +23,14 @@ function hydratePreset(raw: Preset): Preset {
   return {
     ...raw,
     settings: { ...DEFAULT_SETTINGS, ...raw.settings },
-    stats: raw.stats ?? DEFAULT_PRESET_STATS,
+    stats: { ...DEFAULT_PRESET_STATS, ...raw.stats },
+    players:
+      raw.players && raw.players.length > 0
+        ? raw.players
+        : [
+            { id: 'preset-default-1', name: 'Player 1' },
+            { id: 'preset-default-2', name: 'Player 2' },
+          ],
   };
 }
 
@@ -103,10 +110,14 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
   );
 
   let highestTotal = preset.stats.highestTotal;
+  let lowestTotal = preset.stats.lowestTotal;
   card.players.forEach((p, i) => {
     const total = totals[i];
     if (!highestTotal || total > highestTotal.value) {
       highestTotal = { value: total, playerName: p.name, cardName: card.name, date: card.updatedAt };
+    }
+    if (!lowestTotal || total < lowestTotal.value) {
+      lowestTotal = { value: total, playerName: p.name, cardName: card.name, date: card.updatedAt };
     }
   });
 
@@ -135,6 +146,7 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
       totalWinningScore: preset.stats.totalWinningScore + gameWinningScore,
       totalRounds: preset.stats.totalRounds + card.rounds.length,
       highestTotal,
+      lowestTotal,
       bestRound,
     },
   };

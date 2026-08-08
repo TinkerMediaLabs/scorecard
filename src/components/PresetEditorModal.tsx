@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import { ReactNode, useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
@@ -5,29 +6,58 @@ import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 
 import { THEMES, THEME_NAMES } from '../lib/themes';
-import { DEFAULT_SETTINGS, ScorecardSettings } from '../types';
+import { DEFAULT_SETTINGS, Player, ScorecardSettings } from '../types';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSave: (result: { name: string; settings: ScorecardSettings }) => void;
+  onSave: (result: { name: string; settings: ScorecardSettings; players: Player[] }) => void;
   initialName?: string;
   initialSettings?: ScorecardSettings;
+  initialPlayers?: Player[];
 };
 
-export default function PresetEditorModal({ visible, onClose, onSave, initialName, initialSettings }: Props) {
+export default function PresetEditorModal({
+  visible,
+  onClose,
+  onSave,
+  initialName,
+  initialSettings,
+  initialPlayers,
+}: Props) {
   const [name, setName] = useState('');
   const [settings, setSettings] = useState<ScorecardSettings>(DEFAULT_SETTINGS);
+  const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
     if (visible) {
       setName(initialName ?? '');
       setSettings(initialSettings ?? DEFAULT_SETTINGS);
+      setPlayers(
+        initialPlayers && initialPlayers.length > 0
+          ? initialPlayers
+          : [
+              { id: Crypto.randomUUID(), name: 'Player 1' },
+              { id: Crypto.randomUUID(), name: 'Player 2' },
+            ]
+      );
     }
-  }, [visible, initialName, initialSettings]);
+  }, [visible, initialName, initialSettings, initialPlayers]);
 
   const updateSettings = (patch: Partial<ScorecardSettings>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
+  };
+
+  const addPlayer = () => {
+    setPlayers((prev) => [...prev, { id: Crypto.randomUUID(), name: `Player ${prev.length + 1}` }]);
+  };
+
+  const removePlayer = (id: string) => {
+    setPlayers((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const renamePlayer = (id: string, playerName: string) => {
+    setPlayers((prev) => prev.map((p) => (p.id === id ? { ...p, name: playerName } : p)));
   };
 
   const updateCustomField = (index: number, label: string) => {
@@ -52,7 +82,11 @@ export default function PresetEditorModal({ visible, onClose, onSave, initialNam
       Alert.alert('Name Required', 'Give this preset a name before saving.');
       return;
     }
-    onSave({ name: trimmed, settings });
+    if (players.length === 0) {
+      Alert.alert('At Least One Player', 'A preset needs at least one player.');
+      return;
+    }
+    onSave({ name: trimmed, settings, players });
   };
 
   return (
@@ -76,6 +110,26 @@ export default function PresetEditorModal({ visible, onClose, onSave, initialNam
               placeholder="e.g. Tournament Rules"
               style={styles.textInput}
             />
+          </Section>
+
+          <Section title="Players">
+            {players.map((p) => (
+              <View key={p.id} style={styles.playerRow}>
+                <TextInput
+                  value={p.name}
+                  onChangeText={(text) => renamePlayer(p.id, text)}
+                  style={[styles.textInput, styles.playerInput]}
+                />
+                {players.length > 1 && (
+                  <Pressable onPress={() => removePlayer(p.id)} style={styles.deleteButton}>
+                    <Text style={styles.deleteIcon}>🗑</Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+            <Pressable onPress={addPlayer} style={styles.addFieldButton}>
+              <Text style={styles.addFieldButtonText}>+ Add Player/Team</Text>
+            </Pressable>
           </Section>
 
           <Section title="Play Style">
@@ -196,6 +250,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
   rowLabel: { fontSize: 16 },
   playerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  playerInput: { flex: 1, marginRight: 10 },
   themeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   themeSwatch: { width: '47%', paddingVertical: 16, borderRadius: 10, borderWidth: 2, alignItems: 'center' },
   themeLabel: { fontWeight: '600', fontSize: 13 },

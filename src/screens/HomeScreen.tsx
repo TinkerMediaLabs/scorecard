@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }: Props) {
     navigation.navigate('Scorecard', { scorecardId: newCard.id });
   };
 
-  const createFromPreset = async (preset: Preset) => {
+ const createFromPreset = async (preset: Preset) => {
     const now = new Date().toISOString();
     const newCard: Scorecard = {
       id: Crypto.randomUUID(),
@@ -77,10 +77,7 @@ export default function HomeScreen({ navigation }: Props) {
       status: 'active',
       createdAt: now,
       updatedAt: now,
-      players: [
-        { id: Crypto.randomUUID(), name: 'Player 1' },
-        { id: Crypto.randomUUID(), name: 'Player 2' },
-      ],
+      players: preset.players.map((p) => ({ id: Crypto.randomUUID(), name: p.name })),
       rounds: [{ id: Crypto.randomUUID(), scores: {}, bids: {}, melds: {}, bonuses: {}, customValues: {} }],
       settings: preset.settings,
       presetId: preset.id,
@@ -89,11 +86,20 @@ export default function HomeScreen({ navigation }: Props) {
     navigation.navigate('Scorecard', { scorecardId: newCard.id });
   };
 
-  const handleSavePreset = async ({ name, settings }: { name: string; settings: ScorecardSettings }) => {
+const handleSavePreset = async ({
+    name,
+    settings,
+    players,
+  }: {
+    name: string;
+    settings: ScorecardSettings;
+    players: Preset['players'];
+  }) => {
     const preset: Preset = {
       id: editingPreset?.id ?? Crypto.randomUUID(),
       name,
       settings,
+      players,
       createdAt: editingPreset?.createdAt ?? new Date().toISOString(),
       stats: editingPreset?.stats ?? DEFAULT_PRESET_STATS,
     };
