@@ -30,6 +30,7 @@ type Props = {
   roundsPlayed: number;
   lowestScoreWins: boolean;
   rounds: Round[];
+  showRoundWinner: boolean;
 };
 
 export default function FinishSummaryModal({
@@ -41,6 +42,7 @@ export default function FinishSummaryModal({
   roundsPlayed,
   lowestScoreWins,
   rounds,
+  showRoundWinner,
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
@@ -153,7 +155,9 @@ export default function FinishSummaryModal({
                   <Text style={styles.winnerName}>{players[winnerIndex]?.name}</Text>
                   <View style={styles.plaqueDivider} />
                   <Text style={styles.winnerStat}>{totals[winnerIndex]} Points</Text>
-                  <Text style={styles.winnerStat}>{roundWinsCount[winnerIndex]} Rounds Won</Text>
+                  {/* {showRoundWinner && ( */}
+                    <Text style={styles.winnerStat}>{roundWinsCount[winnerIndex]} Rounds Won</Text>
+                  {/* )} */}
                 </View>
               </View>
 

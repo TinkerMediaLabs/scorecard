@@ -137,12 +137,16 @@ export default function ScorecardScreen({ route, navigation }: Props) {
     }));
   };
 
-  const handleDeletePlayer = (playerId: string) => {
+const handleDeletePlayer = (playerId: string) => {
     persist((prev) => {
       const players = prev.players.filter((p) => p.id !== playerId);
       const rounds = prev.rounds.map((r) => {
-        const { [playerId]: _removed, ...rest } = r.scores;
-        return { ...r, scores: rest };
+        const { [playerId]: _removedScore, ...scores } = r.scores;
+        const { [playerId]: _removedBid, ...bids } = r.bids;
+        const { [playerId]: _removedMeld, ...melds } = r.melds;
+        const { [playerId]: _removedBonus, ...bonuses } = r.bonuses;
+        const { [playerId]: _removedCustom, ...customValues } = r.customValues;
+        return { ...r, scores, bids, melds, bonuses, customValues };
       });
       return { ...prev, players, rounds };
     });
@@ -229,7 +233,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         </Pressable>
         <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{card.name}</Text>
         <Pressable onPress={() => setSettingsVisible(true)} style={{ marginRight: 12 }}>
-          <Text style={{ fontSize: 20 }}>⚙️</Text>
+          <Text style={[styles.finishButton, { backgroundColor: 'transparent', color: theme.accent }]}>Edit</Text>
         </Pressable>
         <Pressable
           onPress={card.status === 'finished' ? () => setShowSummary(true) : finishScorecard}
@@ -272,6 +276,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         onAddPlayer={handleAddPlayer}
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
+        showRoundWinner={card.settings.showRoundWinner}
       />
 
       <SettingsModal
@@ -282,6 +287,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
         players={card.players}
         onRenamePlayer={handleRenamePlayer}
         onDeletePlayer={handleDeletePlayer}
+        onAddPlayer={handleAddPlayer}
         onShufflePlayers={handleShufflePlayers}
         onReorderPlayers={handleReorderPlayers}
         settings={card.settings}
@@ -299,6 +305,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
           roundsPlayed={card.rounds.length}
           lowestScoreWins={card.settings.lowestScoreWins}
           rounds={card.rounds}
+          showRoundWinner={card.settings.showRoundWinner}
         />
       )}
     </View>

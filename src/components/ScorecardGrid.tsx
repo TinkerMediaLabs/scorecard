@@ -31,6 +31,7 @@ type Props = {
   onAddRound: () => void;
   screenWidth: number;
   bottomInset?: number;
+  showRoundWinner: boolean;
 };
 
 const ROMAN: [number, string][] = [
@@ -57,7 +58,7 @@ function createStyles(theme: ThemePalette) {
     footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: theme.border },
     corner: { height: ROW_HEIGHT, backgroundColor: theme.surface },
     headerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
-    headerText: { fontWeight: '600', fontSize: 14, color: theme.text },
+    headerText: { fontWeight: '700', fontSize: 14, color: theme.text },
     roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderColor: theme.border },
     roundText: { fontWeight: '600', color: theme.mutedText },
     addCell: { alignItems: 'center', justifyContent: 'center' },
@@ -71,7 +72,7 @@ function createStyles(theme: ThemePalette) {
     extrasValue: { fontSize: 10, color: '#aaaaaa', fontWeight: '600' },
     footerCell: { height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
     footerCellWinner: { backgroundColor: theme.accent },
-    footerTotal: { fontWeight: '700', fontSize: 16, color: theme.text },
+    footerTotal: { fontWeight: '700', fontSize: 18, color: theme.text },
     footerWins: { fontSize: 11, color: theme.mutedText },
     footerWinnerText: { color: theme.accentText },
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
@@ -112,6 +113,7 @@ export default function ScorecardGrid({
   onAddRound,
   screenWidth,
   bottomInset = 0,
+  showRoundWinner,
 }: Props) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), 4));
@@ -319,7 +321,9 @@ export default function ScorecardGrid({
             return (
               <View key={p.id} style={[styles.footerCell, { width: cellWidth }, isWinner && styles.footerCellWinner]}>
                 <Text style={[styles.footerTotal, isWinner && styles.footerWinnerText]}>{totals[i]}</Text>
-                <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{roundWinsCount[i]}W</Text>
+                {showRoundWinner && (
+                  <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{roundWinsCount[i]} Wins</Text>
+                )}
               </View>
             );
           })}

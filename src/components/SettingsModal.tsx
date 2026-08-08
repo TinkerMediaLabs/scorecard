@@ -19,6 +19,7 @@ type Props = {
   players: Player[];
   onRenamePlayer: (playerId: string, name: string) => void;
   onDeletePlayer: (playerId: string) => void;
+  onAddPlayer: () => void;
   settings: ScorecardSettings;
   onUpdateSettings: (patch: Partial<ScorecardSettings>) => void;
   onShufflePlayers: () => void;
@@ -34,6 +35,7 @@ export default function SettingsModal({
   players,
   onRenamePlayer,
   onDeletePlayer,
+  onAddPlayer,
   settings,
   onUpdateSettings,
   onShufflePlayers,
@@ -86,7 +88,7 @@ export default function SettingsModal({
             <View style={styles.playersHeaderRow}>
               <Text style={styles.sectionTitle}>Players</Text>
               <Pressable onPress={onShufflePlayers} style={styles.randomizeButton}>
-                <Text style={styles.randomizeButtonText}>🔀 Randomize</Text>
+                <Text style={styles.randomizeButtonText}>Randomize</Text>
               </Pressable>
             </View>
 
@@ -107,7 +109,7 @@ export default function SettingsModal({
                         onChangeText={(text) => onRenamePlayer(item.id, text)}
                         style={[styles.textInput, styles.playerInput]}
                       />
-                      {players.length > 2 && (
+                      {players.length > 1 && (
                         <Pressable onPress={() => onDeletePlayer(item.id)} style={styles.deleteButton}>
                           <Text style={styles.deleteIcon}>🗑</Text>
                         </Pressable>
@@ -117,6 +119,9 @@ export default function SettingsModal({
                 )}
               />
             </GestureHandlerRootView>
+            <Pressable onPress={onAddPlayer} style={styles.addPlayerButton}>
+              <Text style={styles.addPlayerButtonText}>+ Add Player/Team</Text>
+            </Pressable>
           </View>
 
           <Section title="Play Style">
@@ -151,8 +156,8 @@ export default function SettingsModal({
           </Section>
 
           <Section title="Options">
-            <Row label="Use Roman numerals" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
-            <Row label="Highlight round winner" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
+            <Row label="Roman numeral rounds" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
+            <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
           </Section>
 
           <Section title="Theme">
@@ -231,10 +236,11 @@ export default function SettingsModal({
               </View>
             ) : (
               <Pressable onPress={() => setShowPresetInput(true)} style={styles.randomizeButton}>
-                <Text style={styles.randomizeButtonText}>💾 Save Current Settings as Preset</Text>
+                <Text style={styles.randomizeButtonText}>Save Current Settings as Preset</Text>
               </Pressable>
             )}
           </Section>
+          <View style={{ height: 60 }} />
         </ScrollView>
       </View>
     </Modal>
@@ -328,4 +334,6 @@ const styles = StyleSheet.create({
   presetSaveInput: { flex: 1, marginRight: 10 },
   presetSaveButton: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#155843' },
   presetSaveButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  addPlayerButton: { alignSelf: 'flex-start', marginTop: 12, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#eee' },
+  addPlayerButtonText: { fontSize: 13, fontWeight: '600', color: '#333' },
 });

@@ -9,13 +9,13 @@ const BUNDLE_ID = {
 const APP_NAME = {
   development: 'Scorecard (Dev)',
   staging: 'Scorecard (Staging)',
-  production: 'Universal Scorecard',
+  production: 'OmniScore',
 }[APP_ENV];
 
 module.exports = {
   expo: {
-    name: 'OmniScore',
-    slug: 'OmniScore',
+    name: APP_NAME,
+    slug: 'scorecard',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
