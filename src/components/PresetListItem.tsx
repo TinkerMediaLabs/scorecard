@@ -30,7 +30,7 @@ export default function PresetListItem({ preset, onPress, onEdit, onDelete, onVi
         <Text style={styles.cardMeta}>Tap to start a new scorecard</Text>
       </View>
       <Pressable onPress={onViewStats} hitSlop={10} style={styles.statsButton}>
-        <Text style={styles.statsIcon}>📊</Text>
+        <Text style={styles.statsIcon}>🏆</Text>
       </Pressable>
       <Pressable onPress={onEdit} hitSlop={10} style={styles.editButton}>
         <Text style={styles.editIcon}>✏️</Text>
