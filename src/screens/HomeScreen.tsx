@@ -2,7 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Linking, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
@@ -22,6 +22,9 @@ import {
   saveScorecard,
 } from '../lib/storage';
 import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
+
+const PRIVACY_POLICY_URL = 'https://www.tinkermedia.net/scorecard-app/privacy-policy/';
+const TERMS_OF_USE_URL = 'https://www.tinkermedia.net/scorecard-app/terms/';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -155,6 +158,16 @@ const handleSavePreset = async ({
     );
   };
 
+  const openPrivacyPolicy = () => {
+    setMenuVisible(false);
+    Linking.openURL(PRIVACY_POLICY_URL);
+  };
+
+  const openTermsOfUse = () => {
+    setMenuVisible(false);
+    Linking.openURL(TERMS_OF_USE_URL);
+  };
+
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
@@ -247,8 +260,9 @@ return (
             setMenuVisible(false);
             setManageDataVisible(true);
           }}
-          last
         />
+        <SheetOption label="Privacy Policy" onPress={openPrivacyPolicy} />
+        <SheetOption label="Terms of Use" onPress={openTermsOfUse} last />
       </BottomSheetModal>
 
       <BottomSheetModal visible={manageDataVisible} onClose={() => setManageDataVisible(false)}>
