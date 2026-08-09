@@ -172,7 +172,7 @@ const handleSavePreset = async ({
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>OmniScore</Text>
+        {/* <Text style={styles.title}>Rooky</Text> */}
         <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
           <Text style={styles.menuIcon}>•••</Text>
         </TouchableOpacity>
