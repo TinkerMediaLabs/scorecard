@@ -10,6 +10,7 @@ export interface ThemePalette {
   mutedText: string;
   accent: string;
   accentText: string;
+  roundWinnerHighlight: string;
 }
 
 export const THEMES: Record<Theme, ThemePalette> = {
@@ -23,6 +24,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     mutedText: '#666666',
     accent: '#155843',
     accentText: '#ffffff',
+    roundWinnerHighlight: '#e8e8e8',
   },
   midnight: {
     name: 'midnight',
@@ -34,6 +36,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     mutedText: '#aaaaaa',
     accent: '#00e5ff',
     accentText: '#000000',
+    roundWinnerHighlight: '#242424',
   },
   legalPad: {
     name: 'legalPad',
@@ -45,6 +48,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     mutedText: '#3b49bf',
     accent: '#6a0dad',
     accentText: '#ffffff',
+    roundWinnerHighlight: '#ffe98a',
   },
   chalkboard: {
     name: 'chalkboard',
@@ -56,6 +60,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     mutedText: '#cfd8d3',
     accent: '#ff8fd0',
     accentText: '#1c3d2e',
+    roundWinnerHighlight: '#28493a',
   },
 };
 

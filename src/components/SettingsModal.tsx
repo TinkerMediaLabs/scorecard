@@ -166,6 +166,7 @@ export default function SettingsModal({
           <Section title="Options">
             <Row label="Roman numeral rounds" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
             <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
+            <Row label="Highlight Round Winners" value={settings.highlightRoundWinner} onValueChange={(v) => onUpdateSettings({ highlightRoundWinner: v })} />
           </Section>
 
           <Section title="Text Size">

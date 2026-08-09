@@ -171,7 +171,8 @@ export default function PresetEditorModal({
 
           <Section title="Options">
             <Row label="Use Roman numerals" value={settings.useRomanNumerals} onValueChange={(v) => updateSettings({ useRomanNumerals: v })} />
-            <Row label="Highlight round winner" value={settings.showRoundWinner} onValueChange={(v) => updateSettings({ showRoundWinner: v })} />
+            <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => updateSettings({ showRoundWinner: v })} />
+            <Row label="Highlight Round Winners" value={settings.highlightRoundWinner} onValueChange={(v) => updateSettings({ highlightRoundWinner: v })} />
           </Section>
 
           <Section title="Theme">

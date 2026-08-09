@@ -208,6 +208,21 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
       : Math.max(...totals)
     : 0;
 
+  // Round-winner cell highlighting: only once every player in the round has a score entered
+  // (no highlighting a round that's still being filled in), and includes every tied player.
+  const roundWinnerIds: Record<string, string[]> = {};
+  card.rounds.forEach((r) => {
+    const entries = card.players.map((p) => ({ id: p.id, value: r.scores[p.id] ?? null }));
+    const allEntered = entries.length > 0 && entries.every((e) => e.value !== null);
+    if (!allEntered) {
+      roundWinnerIds[r.id] = [];
+      return;
+    }
+    const values = entries.map((e) => e.value as number);
+    const best = lowestScoreWins ? Math.min(...values) : Math.max(...values);
+    roundWinnerIds[r.id] = entries.filter((e) => e.value === best).map((e) => e.id);
+  });
+
   const finishScorecard = () => {
     Alert.alert('End Game?', 'This marks the scorecard finished and moves it to history.', [
       { text: 'Cancel', style: 'cancel' },
@@ -272,8 +287,10 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         rounds={card.rounds}
         totals={totals}
         roundWinsCount={roundWinsCount}
+        roundWinnerIds={roundWinnerIds}
         leaderTotal={leaderTotal}
         winCondition={card.settings.winCondition}
+        highlightRoundWinner={card.settings.highlightRoundWinner}
         useRomanNumerals={card.settings.useRomanNumerals}
         onScoreChange={handleScoreChange}
         onBidChange={handleBidChange}

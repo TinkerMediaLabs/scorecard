@@ -22,6 +22,7 @@ export interface Round {
 export interface ScorecardSettings {
   winCondition: WinCondition;
   showRoundWinner: boolean;
+  highlightRoundWinner: boolean;
   useRomanNumerals: boolean;
   theme: Theme;
   timerEnabled: boolean;
@@ -85,6 +86,7 @@ export interface Preset {
 export const DEFAULT_SETTINGS: ScorecardSettings = {
   winCondition: 'mostPoints',
   showRoundWinner: true,
+  highlightRoundWinner: true,
   useRomanNumerals: true,
   theme: 'whiteboard',
   timerEnabled: false,

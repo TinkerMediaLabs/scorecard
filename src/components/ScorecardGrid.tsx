@@ -16,6 +16,7 @@ type Props = {
   rounds: Round[];
   totals: number[];
   roundWinsCount: number[];
+  roundWinnerIds: Record<string, string[]>;
   leaderTotal: number;
   winCondition: WinCondition;
   useRomanNumerals: boolean;
@@ -34,8 +35,13 @@ type Props = {
   screenWidth: number;
   bottomInset?: number;
   showRoundWinner: boolean;
+  highlightRoundWinner: boolean;
   textSize: TextSize;
 };
+
+function winsLabel(count: number): string {
+  return `${count} ${count === 1 ? 'Win' : 'Wins'}`;
+}
 
 const ROMAN: [number, string][] = [
   [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
@@ -71,6 +77,7 @@ function createStyles(theme: ThemePalette, textScale: number) {
     addText: { fontSize: 20, color: theme.accent },
     body: { flex: 1, flexDirection: 'row' },
     scoreCell: { alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1, borderColor: theme.border },
+    scoreCellRoundWinner: { backgroundColor: theme.roundWinnerHighlight },
     scoreText: { fontSize: scaled(16), color: theme.text },
     extrasRow: { flexDirection: 'row', marginTop: 2, gap: 14 },
     extraField: { alignItems: 'center' },
@@ -104,6 +111,7 @@ export default function ScorecardGrid({
   rounds,
   totals,
   roundWinsCount,
+  roundWinnerIds,
   leaderTotal,
   winCondition = 'mostPoints',
   useRomanNumerals,
@@ -122,6 +130,7 @@ export default function ScorecardGrid({
   screenWidth,
   bottomInset = 0,
   showRoundWinner,
+  highlightRoundWinner,
   textSize = 'standard',
 }: Props) {
   const textScale = TEXT_SCALE[textSize] ?? 1;
@@ -280,10 +289,16 @@ export default function ScorecardGrid({
                   const meldValue = round.melds?.[p.id] ?? null;
                   const bonusValue = round.bonuses?.[p.id] ?? null;
                   const customValues = round.customValues?.[p.id] ?? [];
+                  const isRoundWinnerCell =
+                    highlightRoundWinner && (roundWinnerIds[round.id]?.includes(p.id) ?? false);
                   return (
                     <Pressable
                       key={p.id}
-                      style={[styles.scoreCell, { width: cellWidth, height: rowHeight }]}
+                      style={[
+                        styles.scoreCell,
+                        { width: cellWidth, height: rowHeight },
+                        isRoundWinnerCell && styles.scoreCellRoundWinner,
+                      ]}
                       onPress={() => openEditor(round.id, p.id, value, bidValue, meldValue, bonusValue, customValues)}
                     >
                       <Text style={styles.scoreText}>{value == null ? '' : value}</Text>
@@ -340,11 +355,11 @@ export default function ScorecardGrid({
                 )}
                 {isRoundsMode ? (
                   <Text style={[styles.footerWinsPrimary, isWinner && styles.footerWinnerText]}>
-                    {roundWinsCount[i]} Wins
+                    {winsLabel(roundWinsCount[i])}
                   </Text>
                 ) : (
                   showRoundWinner && (
-                    <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{roundWinsCount[i]} Wins</Text>
+                    <Text style={[styles.footerWins, isWinner && styles.footerWinnerText]}>{winsLabel(roundWinsCount[i])}</Text>
                   )
                 )}
               </View>
