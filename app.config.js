@@ -9,7 +9,7 @@ const BUNDLE_ID = {
 const APP_NAME = {
   development: 'Scorecard (Dev)',
   staging: 'Scorecard (Staging)',
-  production: 'OmniScore',
+  production: 'Scorecard',
 }[APP_ENV];
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
     userInterfaceStyle: 'automatic',
     ios: {
       bundleIdentifier: BUNDLE_ID,
-      icon: './assets/icon.png',
+      icon: './assets/images/icon.png',
       config: { usesNonExemptEncryption: false }
     },
     android: {
