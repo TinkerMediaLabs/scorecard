@@ -450,7 +450,11 @@ export default function ScorecardGrid({
                 </View>
               ))}
 
-              {!isLastPlayer && (
+              {isLastPlayer ? (
+                <Pressable style={styles.nextButton} onPress={commitEditor}>
+                  <Text style={styles.nextButtonText}>✓ Done</Text>
+                </Pressable>
+              ) : (
                 <Pressable style={styles.nextButton} onPress={advanceToNextPlayer}>
                   <Text style={styles.nextButtonText}>Next Player →</Text>
                 </Pressable>
