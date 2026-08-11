@@ -2,16 +2,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
 import BottomSheetModal from '../components/BottomSheetModal';
+import Coachmark from '../components/Coachmark';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
+import { useTour } from '../contexts/TourContext';
 import {
   clearAllData,
   clearHistory,
@@ -26,6 +28,7 @@ import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSet
 
 const PRIVACY_POLICY_URL = 'https://www.tinkermedia.net/scorecard-app/privacy-policy/';
 const TERMS_OF_USE_URL = 'https://www.tinkermedia.net/scorecard-app/terms/';
+const MAX_RECENT_PRESETS = 4;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -37,6 +40,9 @@ export default function HomeScreen({ navigation }: Props) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [manageDataVisible, setManageDataVisible] = useState(false);
   const insets = useSafeAreaInsets();
+  const tour = useTour();
+  const newScorecardRef = useRef<View>(null);
+  const newPresetRef = useRef<View>(null);
 
   const reload = useCallback(() => {
     loadAllScorecards().then((cards) => {
@@ -45,7 +51,9 @@ export default function HomeScreen({ navigation }: Props) {
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
       setScorecards(active);
     });
-    listPresets().then(setPresets);
+    listPresets().then((all) =>
+      setPresets([...all].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+    );
   }, []);
 
   useFocusEffect(
@@ -169,18 +177,23 @@ const handleSavePreset = async ({
     WebBrowser.openBrowserAsync(TERMS_OF_USE_URL);
   };
 
+  const recentPresets = presets.slice(0, MAX_RECENT_PRESETS);
+  const hasMorePresets = presets.length > MAX_RECENT_PRESETS;
+
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
-        {/* <Text style={styles.title}>Rooky</Text> */}
+        <Text style={[styles.title, {fontSize: 22}]}>Let's Play!</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
-          <Text style={styles.menuIcon}>•••</Text>
+          <Text style={[styles.menuIcon]}>Options</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.newButton} onPress={createNewScorecard}>
-        <Text style={styles.newButtonText}>+ New Scorecard</Text>
-      </TouchableOpacity>
+      <View ref={newScorecardRef} collapsable={false}>
+        <TouchableOpacity style={styles.newButton} onPress={createNewScorecard}>
+          <Text style={styles.newButtonText}>+ New Scorecard</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={scorecards}
@@ -191,22 +204,24 @@ return (
             <View style={styles.presetsSection}>
               <View style={styles.presetsHeaderRow}>
                 <Text style={styles.presetsTitle}>Presets</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setEditingPreset(null);
-                    setEditorVisible(true);
-                  }}
-                >
-                  <Text style={styles.presetsAddLink}>+ New Preset</Text>
-                </TouchableOpacity>
+                <View ref={newPresetRef} collapsable={false}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditingPreset(null);
+                      setEditorVisible(true);
+                    }}
+                  >
+                    <Text style={styles.presetsAddLink}>+ New Preset</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {presets.length === 0 ? (
+              {recentPresets.length === 0 ? (
                 <Text style={styles.presetsEmpty}>
                   No presets yet — save one from a scorecard's Settings, or create one here.
                 </Text>
               ) : (
-                presets.map((preset) => (
+                recentPresets.map((preset) => (
                   <PresetListItem
                     key={preset.id}
                     preset={preset}
@@ -219,6 +234,15 @@ return (
                     onViewStats={() => navigation.navigate('PresetStats', { presetId: preset.id })}
                   />
                 ))
+              )}
+
+              {hasMorePresets && (
+                <TouchableOpacity
+                  style={styles.seeAllButton}
+                  onPress={() => navigation.navigate('AllPresets')}
+                >
+                  <Text style={styles.seeAllText}>See All Presets</Text>
+                </TouchableOpacity>
               )}
             </View>
 
@@ -245,6 +269,7 @@ return (
         onSave={handleSavePreset}
         initialName={editingPreset?.name}
         initialSettings={editingPreset?.settings}
+        initialPlayers={editingPreset?.players}
       />
 
       <BottomSheetModal visible={menuVisible} onClose={() => setMenuVisible(false)}>
@@ -284,6 +309,25 @@ return (
           }}
         />
       </BottomSheetModal>
+
+      <Coachmark
+        visible={tour.active && tour.step === 'newScorecard'}
+        targetRef={newScorecardRef}
+        text="Tap here to start a new scorecard and begin tracking scores."
+        stepLabel={`Step ${tour.stepIndex + 1} of ${tour.totalSteps}`}
+        isLast={false}
+        onNext={tour.next}
+        onSkip={tour.skip}
+      />
+      <Coachmark
+        visible={tour.active && tour.step === 'newPreset'}
+        targetRef={newPresetRef}
+        text="Save your favorite game settings as a preset here, so you can reuse them instantly next time."
+        stepLabel={`Step ${tour.stepIndex + 1} of ${tour.totalSteps}`}
+        isLast={false}
+        onNext={tour.next}
+        onSkip={tour.skip}
+      />
     </View>
   );
 }
@@ -310,7 +354,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   title: { fontSize: 28, fontWeight: '700' },
-  menuIcon: { fontSize: 22, fontWeight: '900', color: '#333', paddingHorizontal: 8, letterSpacing: 1 },
+  menuIcon: { fontSize: 16, fontWeight: '700', color: '#666666', paddingHorizontal: 8, letterSpacing: 1 },
   newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 24 },
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   list: { paddingBottom: 20 },
@@ -320,6 +364,8 @@ const styles = StyleSheet.create({
   presetsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase' },
   presetsAddLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
   presetsEmpty: { fontSize: 13, color: '#888' },
+  seeAllButton: { alignSelf: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 16 },
+  seeAllText: { fontSize: 14, fontWeight: '600', color: '#155843' },
   scorecardsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
   sheetOption: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#eee' },
   sheetOptionLast: { borderBottomWidth: 0 },

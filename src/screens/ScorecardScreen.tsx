@@ -2,16 +2,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
+import Coachmark from '../components/Coachmark';
 import FinishSummaryModal from '../components/FinishSummaryModal';
 import RoundTimer from '../components/RoundTimer';
 import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
+import { useTour } from '../contexts/TourContext';
 
 import { loadScorecard, recordPresetGameResult, savePreset, saveScorecard } from '../lib/storage';
 import { THEMES } from '../lib/themes';
@@ -28,6 +30,9 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const insets = useSafeAreaInsets();
+  const tour = useTour();
+  const editButtonRef = useRef<View>(null);
+  const finishButtonRef = useRef<View>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -44,7 +49,10 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   }
 
   const theme = THEMES[card.settings.theme];
-  const darkTheme = card.settings.theme === 'chalkboard' || card.settings.theme === 'midnight';
+  const darkTheme =
+    card.settings.theme === 'chalkboard' ||
+    card.settings.theme === 'chalkboard2' ||
+    card.settings.theme === 'midnight';
 
   const persist = (updater: (prev: Scorecard) => Scorecard) => {
     setCard((prev) => {
@@ -253,18 +261,41 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
           <Text style={{ fontSize: 20, color: theme.text }}>←</Text>
         </Pressable>
         <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{card.name}</Text>
-        <Pressable onPress={() => setSettingsVisible(true)} style={{ marginRight: 12 }}>
-          <Text style={[styles.finishButton, { backgroundColor: 'transparent', color: theme.accent }]}>Edit</Text>
-        </Pressable>
-        <Pressable
-          onPress={card.status === 'finished' ? () => setShowSummary(true) : finishScorecard}
-          style={[styles.finishButton, { backgroundColor: card.status === 'finished' ? 'transparent' : theme.accent}]}
-        >
-          <Text style={[styles.finishText, { color: card.status === 'finished' ? theme.accent : theme.accentText }]}>
-            {card.status === 'finished' ? 'Completed' : 'Finish'}
-          </Text>
-        </Pressable>
+        <View ref={editButtonRef} collapsable={false} style={{ marginRight: 12 }}>
+          <Pressable onPress={() => setSettingsVisible(true)}>
+            <Text style={[styles.finishButton, { backgroundColor: 'transparent', color: theme.accent }]}>Edit</Text>
+          </Pressable>
+        </View>
+        <View ref={finishButtonRef} collapsable={false}>
+          <Pressable
+            onPress={card.status === 'finished' ? () => setShowSummary(true) : finishScorecard}
+            style={[styles.finishButton, { backgroundColor: card.status === 'finished' ? 'transparent' : theme.accent}]}
+          >
+            <Text style={[styles.finishText, { color: card.status === 'finished' ? theme.accent : theme.accentText }]}>
+              {card.status === 'finished' ? 'Completed' : 'Finish'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
+
+      <Coachmark
+        visible={tour.active && tour.step === 'editScorecard'}
+        targetRef={editButtonRef}
+        text="Tap Edit anytime to change players, settings, or scoring options for this game."
+        stepLabel={`Step ${tour.stepIndex + 1} of ${tour.totalSteps}`}
+        isLast={false}
+        onNext={tour.next}
+        onSkip={tour.skip}
+      />
+      <Coachmark
+        visible={tour.active && tour.step === 'finishScorecard'}
+        targetRef={finishButtonRef}
+        text="When the game is over, tap Finish to lock in the results and see the recap."
+        stepLabel={`Step ${tour.stepIndex + 1} of ${tour.totalSteps}`}
+        isLast
+        onNext={tour.next}
+        onSkip={tour.skip}
+      />
 
       {card.settings.timerEnabled && (
         <RoundTimer
