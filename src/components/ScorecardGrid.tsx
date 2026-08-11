@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ImageBackground, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
@@ -135,6 +135,10 @@ export default function ScorecardGrid({
 }: Props) {
   const textScale = TEXT_SCALE[textSize] ?? 1;
   const styles = useMemo(() => createStyles(theme, textScale), [theme, textScale]);
+  const BackgroundComponent: any = theme.backgroundImage ? ImageBackground : View;
+  const backgroundProps = theme.backgroundImage
+    ? { source: theme.backgroundImage, resizeMode: 'cover' as const }
+    : {};
   const maxVisibleColumns = textSize === 'extraLarge' ? 3 : 4;
   const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), maxVisibleColumns));
   const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
@@ -252,7 +256,7 @@ export default function ScorecardGrid({
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomInset }]}>
+    <BackgroundComponent style={[styles.container, { paddingBottom: bottomInset }]} {...backgroundProps}>
       <View style={styles.headerRow}>
         <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
         <Animated.ScrollView ref={headerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
@@ -463,6 +467,6 @@ export default function ScorecardGrid({
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </BackgroundComponent>
   );
 }

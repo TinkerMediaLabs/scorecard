@@ -1,3 +1,4 @@
+import { ImageSourcePropType } from 'react-native';
 import { Theme } from '../types';
 
 export interface ThemePalette {
@@ -11,6 +12,7 @@ export interface ThemePalette {
   accent: string;
   accentText: string;
   roundWinnerHighlight: string;
+  backgroundImage?: ImageSourcePropType;
 }
 
 export const THEMES: Record<Theme, ThemePalette> = {
@@ -62,6 +64,19 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accentText: '#1c3d2e',
     roundWinnerHighlight: '#28493a',
   },
+  chalkboard2: {
+    name: 'chalkboard2',
+    label: 'Chalkboard 2',
+    background: 'black',
+    surface: 'transparent',
+    border: '#4e4e4e',
+    text: '#ffffff',
+    mutedText: '#cfd8d3',
+    accent: '#7f7e7e',
+    accentText: 'white',
+    roundWinnerHighlight: '#7f7f7f',
+    backgroundImage: require('../../assets/images/chalkboard.jpg'),
+  },
 };
 
-export const THEME_NAMES: Theme[] = ['whiteboard', 'midnight', 'legalPad', 'chalkboard'];
+export const THEME_NAMES: Theme[] = ['whiteboard', 'midnight', 'legalPad', 'chalkboard', 'chalkboard2'];
