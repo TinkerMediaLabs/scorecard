@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import * as Sharing from 'expo-sharing';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { PIConfetti } from 'react-native-fast-confetti';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -10,9 +11,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { captureRef } from 'react-native-view-shot';
 
 import { Player, Round, WinCondition } from '../types';
 import Text from './AppText';
+import RecapShareCard, { RecapLeaderboardEntry } from './RecapShareCard';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const CARD_OFFSCREEN_Y = SCREEN_H * 0.85;
@@ -46,6 +49,8 @@ export default function FinishSummaryModal({
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
+  const recapCardRef = useRef<View>(null);
+  const [sharing, setSharing] = useState(false);
 
   const isRoundsMode = winCondition === 'mostRoundsWon';
   const lowestScoreWins = winCondition === 'leastPoints';
@@ -128,6 +133,40 @@ export default function FinishSummaryModal({
       ? Math.round(((bestTotal - secondPlaceTotal) / secondPlaceTotal) * 100)
       : null;
 
+  const leaderboardEntries: RecapLeaderboardEntry[] = [
+    {
+      player: players[winnerIndex],
+      rank: 1,
+      label: isRoundsMode ? `${roundWinsCount[winnerIndex]} wins` : `${totals[winnerIndex]} pts`,
+    },
+    ...rest.map((r, i) => ({
+      player: r.player,
+      rank: i + 2,
+      label: isRoundsMode ? `${r.wins} wins` : `${r.total} pts`,
+    })),
+  ];
+
+  const bestRoundLabel = bestRoundScore ? `${bestRoundScore.value} (${bestRoundScore.playerName})` : '—';
+  const dateLabel = new Date().toLocaleDateString();
+
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const uri = await captureRef(recapCardRef, { format: 'png', quality: 1 });
+      const available = await Sharing.isAvailableAsync();
+      if (available) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share Recap' });
+      } else {
+        Alert.alert('Sharing Unavailable', 'Sharing isn’t available on this device.');
+      }
+    } catch {
+      Alert.alert('Share Failed', 'Something went wrong generating the recap image.');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={closeAnimated}>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -152,6 +191,10 @@ export default function FinishSummaryModal({
             </GestureDetector>
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+              <Pressable style={styles.shareButton} onPress={handleShare} disabled={sharing}>
+                <Text style={styles.shareButtonText}>{sharing ? 'Preparing…' : '↗ Share Recap'}</Text>
+              </Pressable>
+
               <View style={styles.plaqueOuter}>
                 <View style={styles.plaqueInner}>
                   <Text style={styles.trophy}>🏆</Text>
@@ -202,6 +245,17 @@ export default function FinishSummaryModal({
               </View>
             </ScrollView>
           </Animated.View>
+
+          <View style={styles.hiddenCardWrap} pointerEvents="none">
+            <RecapShareCard
+              ref={recapCardRef}
+              winnerName={players[winnerIndex]?.name ?? ''}
+              leaderboard={leaderboardEntries}
+              roundsPlayed={roundsPlayed}
+              bestRoundLabel={bestRoundLabel}
+              dateLabel={dateLabel}
+            />
+          </View>
         </View>
       </GestureHandlerRootView>
     </Modal>
@@ -214,6 +268,8 @@ const styles = StyleSheet.create({
   dragHandleArea: { alignItems: 'center', paddingVertical: 12 },
   dragHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#ddd' },
   content: { paddingHorizontal: 20, paddingBottom: 10 },
+  shareButton: { alignSelf: 'flex-end', marginBottom: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#f0f0f0' },
+  shareButtonText: { fontSize: 13, fontWeight: '700', color: '#155843' },
   plaqueOuter: {
     backgroundColor: '#D4AF37',
     borderRadius: 18,
@@ -247,4 +303,5 @@ const styles = StyleSheet.create({
   statTile: { width: '48%', backgroundColor: '#f0f0f0', borderRadius: 10, padding: 16, marginBottom: 12, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '700' },
   statLabel: { fontSize: 12, color: '#666', marginTop: 4, textAlign: 'center' },
+  hiddenCardWrap: { position: 'absolute', top: -10000, left: 0, opacity: 1 },
 });
