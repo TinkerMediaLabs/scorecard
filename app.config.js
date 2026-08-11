@@ -16,7 +16,7 @@ module.exports = {
   expo: {
     name: APP_NAME,
     slug: 'scorecard',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'scorecard',
@@ -43,6 +43,7 @@ module.exports = {
     plugins: [
        "expo-audio",
        "expo-font",
+       "expo-sharing",
       [
         'expo-splash-screen',
         {
