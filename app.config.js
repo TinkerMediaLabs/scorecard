@@ -16,14 +16,15 @@ module.exports = {
   expo: {
     name: APP_NAME,
     slug: 'scorecard',
-    version: '1.0.1',
-    orientation: 'portrait',
+    version: '1.0.0',
+    orientation: 'default',
     icon: './assets/images/icon.png',
     scheme: 'scorecard',
     userInterfaceStyle: 'automatic',
     ios: {
       bundleIdentifier: BUNDLE_ID,
       icon: './assets/images/icon.png',
+      supportsTablet: true,
       config: { usesNonExemptEncryption: false }
     },
     android: {
@@ -43,7 +44,6 @@ module.exports = {
     plugins: [
        "expo-audio",
        "expo-font",
-       "expo-sharing",
       [
         'expo-splash-screen',
         {

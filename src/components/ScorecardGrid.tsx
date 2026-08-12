@@ -11,6 +11,14 @@ const ROUND_COL_WIDTH = 56;
 const ROW_HEIGHT = 56;
 const EXPANDED_ROW_HEIGHT = 78;
 
+// Minimum comfortable cell width, in points, before we scroll instead of shrinking further.
+// These match what 4 columns (standard/large) and 3 columns (extraLarge) worked out to on a
+// typical phone, so phone layouts are unchanged. On wider screens (tablets), more columns of
+// at least this width fit before the floor kicks in, instead of the same fixed column count
+// just stretching into oversized cells.
+const MIN_CELL_WIDTH_STANDARD = 84;
+const MIN_CELL_WIDTH_EXTRA_LARGE = 111;
+
 type Props = {
   players: Player[];
   rounds: Round[];
@@ -139,9 +147,10 @@ export default function ScorecardGrid({
   const backgroundProps = theme.backgroundImage
     ? { source: theme.backgroundImage, resizeMode: 'cover' as const }
     : {};
-  const maxVisibleColumns = textSize === 'extraLarge' ? 3 : 4;
-  const cellWidth = Math.floor((screenWidth - ROUND_COL_WIDTH) / Math.min(Math.max(players.length, 1), maxVisibleColumns));
   const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
+  const minCellWidth = textSize === 'extraLarge' ? MIN_CELL_WIDTH_EXTRA_LARGE : MIN_CELL_WIDTH_STANDARD;
+  const maxVisibleColumns = Math.max(1, Math.floor(scrollAreaWidth / minCellWidth));
+  const cellWidth = Math.floor(scrollAreaWidth / Math.min(Math.max(players.length, 1), maxVisibleColumns));
   const hasExtras = bidEnabled || meldEnabled || bonusEnabled || customFields.length > 0;
   const rowHeight = Math.round((hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT) * textScale);
   const isRoundsMode = winCondition === 'mostRoundsWon';

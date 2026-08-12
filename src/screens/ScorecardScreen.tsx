@@ -3,7 +3,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
@@ -22,14 +22,13 @@ import { DEFAULT_PRESET_STATS, Scorecard } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
 export default function ScorecardScreen({ route, navigation }: Props) {
   const { scorecardId } = route.params;
   const [card, setCard] = useState<Scorecard | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const insets = useSafeAreaInsets();
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   const tour = useTour();
   const editButtonRef = useRef<View>(null);
   const finishButtonRef = useRef<View>(null);
