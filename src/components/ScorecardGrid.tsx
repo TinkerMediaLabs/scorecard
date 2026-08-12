@@ -98,16 +98,17 @@ function createStyles(theme: ThemePalette, textScale: number) {
     footerWinsPrimary: { fontWeight: '700', fontSize: scaled(22), color: theme.text },
     footerWinnerText: { color: theme.accentText },
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
-    modalCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 220 },
+    modalCard: { backgroundColor: '#fff', borderRadius: 12, paddingVertical: 20, paddingHorizontal: 26, width: 260 },
     modalInputRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
     modalInput: { fontSize: scaled(40), textAlign: 'center', color: '#000', width: 120 },
-    signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eee' },
-    signToggleText: { fontSize: scaled(16), fontWeight: '700', color: '#000' },
-    extraFieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
-    extraFieldLabel: { fontSize: scaled(14), fontWeight: '600', color: '#333' },
-    extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: scaled(20), textAlign: 'center', width: 80, color: '#000' },
+    signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' },
+    signToggleText: { fontSize: scaled(16), fontWeight: '700', color: '#000', textAlign: 'center' },    extraFieldRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
+    extraFieldLabel: { fontSize: scaled(14), fontWeight: '600', color: '#333', flex: 1 },
+    extraFieldInputGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: scaled(18), textAlign: 'center', width: 55, color: '#000' },
+    stepperButton: { width: 26, height: 26, borderRadius: 6, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' },
+    stepperButtonText: { fontSize: scaled(16), fontWeight: '700', color: '#333', textAlign: 'center', includeFontPadding: false },    nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
     modalTitle: { fontSize: scaled(16), fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: 12 },
-    nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
     nextButtonText: { fontWeight: '700', color: theme.accentText },
     modalPlayerName: { fontSize: scaled(14), color: '#888', textAlign: 'center', marginBottom: 12 },
     modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginBottom: 16 },
@@ -209,6 +210,15 @@ export default function ScorecardGrid({
     if (trimmed === '' || trimmed === '-') return null;
     const num = Number(trimmed);
     return Number.isNaN(num) ? null : num;
+  };
+
+  const applyFieldToScore = (fieldValue: string, sign: 1 | -1) => {
+    const amount = parseField(fieldValue);
+    if (amount == null) return;
+    setDraftScore((prev) => {
+      const current = parseField(prev) ?? 0;
+      return String(current + sign * amount);
+    });
   };
 
   const commitCurrentFields = () => {
@@ -410,57 +420,50 @@ export default function ScorecardGrid({
               </View>
 
               {bidEnabled && (
-                <View style={styles.extraFieldRow}>
-                  <Text style={styles.extraFieldLabel}>Bid</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    value={draftBid}
-                    onChangeText={(text) => setDraftBid(text.replace(/[^0-9]/g, ''))}
-                    style={styles.extraFieldInput}
-                  />
-                </View>
+                <ExtraFieldRow
+                  label="Bid"
+                  value={draftBid}
+                  onChangeText={(text) => setDraftBid(text.replace(/[^0-9]/g, ''))}
+                  onApply={(sign) => applyFieldToScore(draftBid, sign)}
+                  styles={styles}
+                />
               )}
 
               {meldEnabled && (
-                <View style={styles.extraFieldRow}>
-                  <Text style={styles.extraFieldLabel}>Meld</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    value={draftMeld}
-                    onChangeText={(text) => setDraftMeld(text.replace(/[^0-9]/g, ''))}
-                    style={styles.extraFieldInput}
-                  />
-                </View>
+                <ExtraFieldRow
+                  label="Meld"
+                  value={draftMeld}
+                  onChangeText={(text) => setDraftMeld(text.replace(/[^0-9]/g, ''))}
+                  onApply={(sign) => applyFieldToScore(draftMeld, sign)}
+                  styles={styles}
+                />
               )}
 
               {bonusEnabled && (
-                <View style={styles.extraFieldRow}>
-                  <Text style={styles.extraFieldLabel}>Bonus</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    value={draftBonus}
-                    onChangeText={(text) => setDraftBonus(text.replace(/[^0-9]/g, ''))}
-                    style={styles.extraFieldInput}
-                  />
-                </View>
+                <ExtraFieldRow
+                  label="Bonus"
+                  value={draftBonus}
+                  onChangeText={(text) => setDraftBonus(text.replace(/[^0-9]/g, ''))}
+                  onApply={(sign) => applyFieldToScore(draftBonus, sign)}
+                  styles={styles}
+                />
               )}
 
               {customFields.map((label, i) => (
-                <View key={i} style={styles.extraFieldRow}>
-                  <Text style={styles.extraFieldLabel}>{label}</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    value={draftCustom[i] ?? ''}
-                    onChangeText={(text) =>
-                      setDraftCustom((prev) => {
-                        const next = [...prev];
-                        next[i] = text.replace(/[^0-9]/g, '');
-                        return next;
-                      })
-                    }
-                    style={styles.extraFieldInput}
-                  />
-                </View>
+                <ExtraFieldRow
+                  key={i}
+                  label={label}
+                  value={draftCustom[i] ?? ''}
+                  onChangeText={(text) =>
+                    setDraftCustom((prev) => {
+                      const next = [...prev];
+                      next[i] = text.replace(/[^0-9]/g, '');
+                      return next;
+                    })
+                  }
+                  onApply={(sign) => applyFieldToScore(draftCustom[i] ?? '', sign)}
+                  styles={styles}
+                />
               ))}
 
               {isLastPlayer ? (
@@ -477,5 +480,39 @@ export default function ScorecardGrid({
         </KeyboardAvoidingView>
       </Modal>
     </BackgroundComponent>
+  );
+}
+
+function ExtraFieldRow({
+  label,
+  value,
+  onChangeText,
+  onApply,
+  styles,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  onApply: (sign: 1 | -1) => void;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <View style={styles.extraFieldRow}>
+      <Text style={styles.extraFieldLabel}>{label}</Text>
+      <View style={styles.extraFieldInputGroup}>
+        <TextInput
+          keyboardType="number-pad"
+          value={value}
+          onChangeText={onChangeText}
+          style={styles.extraFieldInput}
+        />
+        <Pressable style={styles.stepperButton} onPress={() => onApply(-1)} hitSlop={6}>
+          <Text style={styles.stepperButtonText}>−</Text>
+        </Pressable>
+        <Pressable style={styles.stepperButton} onPress={() => onApply(1)} hitSlop={6}>
+          <Text style={styles.stepperButtonText}>+</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
