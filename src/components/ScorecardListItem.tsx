@@ -1,5 +1,6 @@
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Text from './AppText';
+import SwipeableCard, { SwipeAction } from './SwipeableCard';
 
 import { Scorecard } from '../types';
 
@@ -17,25 +18,24 @@ export default function ScorecardListItem({ card, onPress, onDelete }: Props) {
     ]);
   };
 
+  const actions: SwipeAction[] = [
+    { key: 'delete', label: 'Delete', icon: 'trash', color: '#dc3545', onPress: confirmDelete },
+  ];
+
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <SwipeableCard actions={actions} onPress={onPress} cardStyle={styles.card}>
       <View style={{ flex: 1 }}>
         <Text style={styles.cardName}>{card.name}</Text>
         <Text style={styles.cardMeta}>
           {card.status === 'finished' ? 'Finished' : 'In progress'} · {card.players.length} players
         </Text>
       </View>
-      <Pressable onPress={confirmDelete} hitSlop={10} style={styles.deleteButton}>
-        <Text style={styles.deleteIcon}>🗑</Text>
-      </Pressable>
-    </Pressable>
+    </SwipeableCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 10, padding: 16, marginBottom: 10 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 10, padding: 16 },
   cardName: { fontSize: 16, fontWeight: '600' },
   cardMeta: { fontSize: 13, color: '#666', marginTop: 4 },
-  deleteButton: { marginLeft: 12, padding: 4 },
-  deleteIcon: { fontSize: 18 },
 });
