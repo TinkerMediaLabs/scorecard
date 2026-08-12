@@ -26,9 +26,22 @@ import {
 } from '../lib/storage';
 import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
 
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+
 const PRIVACY_POLICY_URL = 'https://www.tinkermedia.net/scorecard-app/privacy-policy/';
 const TERMS_OF_USE_URL = 'https://www.tinkermedia.net/scorecard-app/terms/';
+
 const MAX_RECENT_PRESETS = 4;
+const HEADER_ROW_HEIGHT = 36;
+const HEADER_COLLAPSE_DISTANCE = 60;
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList as new () => FlatList<Scorecard>);
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -43,6 +56,20 @@ export default function HomeScreen({ navigation }: Props) {
   const tour = useTour();
   const newScorecardRef = useRef<View>(null);
   const newPresetRef = useRef<View>(null);
+
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    height: interpolate(scrollY.value, [0, HEADER_COLLAPSE_DISTANCE], [HEADER_ROW_HEIGHT, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollY.value, [0, HEADER_COLLAPSE_DISTANCE * 0.6], [1, 0], Extrapolation.CLAMP),
+    marginBottom: interpolate(scrollY.value, [0, HEADER_COLLAPSE_DISTANCE], [20, 0], Extrapolation.CLAMP),
+  }));
 
   const reload = useCallback(() => {
     loadAllScorecards().then((cards) => {
@@ -182,12 +209,12 @@ const handleSavePreset = async ({
 
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
-      <View style={styles.headerRow}>
+     <Animated.View style={[styles.headerRow, headerAnimatedStyle]}>
         <Text style={[styles.title, {fontSize: 22}]}>Let's Play!</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
           <Text style={[styles.menuIcon]}>Options</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       <View ref={newScorecardRef} collapsable={false}>
         <TouchableOpacity style={styles.newButton} onPress={createNewScorecard}>
@@ -195,10 +222,13 @@ return (
         </TouchableOpacity>
       </View>
 
-      <FlatList
+      <AnimatedFlatList
         data={scorecards}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Scorecard) => item.id}
         contentContainerStyle={styles.list}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
             <View style={styles.presetsSection}>
@@ -251,7 +281,7 @@ return (
         }
         ListEmptyComponent={<Text style={styles.empty}>No scorecards yet.</Text>}
         ListFooterComponent={<View style={styles.footer}></View>}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: Scorecard }) => (
           <ScorecardListItem
             card={item}
             onPress={() => navigation.navigate('Scorecard', { scorecardId: item.id })}
@@ -352,8 +382,7 @@ function SheetOption({
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  title: { fontSize: 28, fontWeight: '700' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },  title: { fontSize: 28, fontWeight: '700' },
   menuIcon: { fontSize: 16, fontWeight: '700', color: '#666666', paddingHorizontal: 8, letterSpacing: 1 },
   newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 24 },
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },

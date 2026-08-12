@@ -91,6 +91,7 @@ export default function AllPresetsScreen({ navigation }: Props) {
         data={presets}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={<Text style={styles.empty}>No presets yet.</Text>}
         renderItem={({ item }) => (
           <PresetListItem

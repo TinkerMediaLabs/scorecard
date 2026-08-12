@@ -49,6 +49,7 @@ export default function HistoryScreen({ navigation }: Props) {
         data={scorecards}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={<Text style={styles.empty}>No finished scorecards yet.</Text>}
         renderItem={({ item }) => (
           <ScorecardListItem
