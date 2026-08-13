@@ -1,5 +1,5 @@
 export type ScorecardStatus = 'active' | 'finished';
-export type Theme = 'whiteboard' | 'midnight' | 'legalPad' | 'chalkboard' | 'chalkboard2';
+export type Theme = 'whiteboard' | 'midnight' | 'legalPad' | 'chalkboard' | 'chalkboard2' | 'retro';
 export type DoneSound = 'none' | 'ting' | 'rooster' | 'whistle' | 'doorbell' | 'airHorn' | 'trombone' | 'meepMeep' | 'tickTock' | 'bomb';
 export type TickerSound = 'none' | 'clock' | 'stopwatch' | 'grandfather' | 'waterTap' | 'blood' | 'warDrums';
 export type TextSize = 'standard' | 'large' | 'extraLarge';

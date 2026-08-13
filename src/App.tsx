@@ -30,10 +30,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    ChalkboardBold: require('../assets/fonts/chalkboard-se-bold.ttf'),
-    ChalkboardRegular: require('../assets/fonts/chalkboard-se-regular.ttf'),
-    ChalkboardLight: require('../assets/fonts/chalkboard-se-light.ttf'),
-  });
+      ChalkboardBold: require('../assets/fonts/chalkboard-se-bold.ttf'),
+      ChalkboardRegular: require('../assets/fonts/chalkboard-se-regular.ttf'),
+      ChalkboardLight: require('../assets/fonts/chalkboard-se-light.ttf'),
+      PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
+    });
 
 useEffect(() => {
   if (fontsLoaded) {

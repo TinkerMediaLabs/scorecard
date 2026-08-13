@@ -38,7 +38,7 @@ type Props = {
   onMeldChange: (roundId: string, playerId: string, value: number | null) => void;
   onBonusChange: (roundId: string, playerId: string, value: number | null) => void;
   onCustomValueChange: (roundId: string, playerId: string, fieldIndex: number, value: number | null) => void;
-  onAddPlayer: () => void;
+  //onAddPlayer: () => void;
   onAddRound: () => void;
   screenWidth: number;
   bottomInset?: number;
@@ -76,42 +76,43 @@ function createStyles(theme: ThemePalette, textScale: number) {
     container: { flex: 1, backgroundColor: theme.background },
     headerRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: theme.border },
     footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: theme.border },
-    corner: { height: scaledRowHeight, backgroundColor: theme.surface },
-    headerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
-    headerText: { fontWeight: '700', fontSize: scaled(14), color: theme.text },
-    roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderColor: theme.border },
-    roundText: { fontWeight: '600', fontSize: scaled(14), color: theme.mutedText },
+    corner: { height: scaledRowHeight, backgroundColor: theme.roundColumnSurface ?? theme.surface },    headerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', 
+    borderRightWidth: 1, borderColor: theme.border },
+    headerText: { fontWeight: '700', fontSize: scaled(14), color: theme.text, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
+    roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.roundColumnSurface ?? theme.surface, borderBottomWidth: 1, borderColor: theme.border },    roundText: { fontWeight: '600', fontSize: scaled(14), color: theme.mutedText, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
     addCell: { alignItems: 'center', justifyContent: 'center' },
     addText: { fontSize: 20, color: theme.accent },
     body: { flex: 1, flexDirection: 'row' },
     scoreCell: { alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1, borderColor: theme.border },
     scoreCellRoundWinner: { backgroundColor: theme.roundWinnerHighlight },
-    scoreText: { fontSize: scaled(16), color: theme.text },
+    scoreText: { fontSize: scaled(16), color: theme.text, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
     extrasRow: { flexDirection: 'row', marginTop: 2, gap: 14 },
     extraField: { alignItems: 'center' },
     extrasLabel: { fontSize: scaled(9), color: '#aaaaaa' },
     extrasValue: { fontSize: scaled(10), color: '#aaaaaa', fontWeight: '600' },
     footerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
     footerCellWinner: { backgroundColor: theme.accent },
-    footerTotal: { fontWeight: '700', fontSize: scaled(18), color: theme.text },
-    footerWins: { fontSize: scaled(11), color: theme.mutedText },
-    footerWinsPrimary: { fontWeight: '700', fontSize: scaled(22), color: theme.text },
+    footerTotal: { fontWeight: '700', fontSize: scaled(18), color: theme.text, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
+    footerWins: { fontSize: scaled(11), color: theme.mutedText, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
+    footerWinsPrimary: { fontWeight: '700', fontSize: scaled(22), color: theme.text, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },    
     footerWinnerText: { color: theme.accentText },
     modalBackdrop: { flex: 1, backgroundColor: '#00000055', alignItems: 'center', justifyContent: 'center' },
-    modalCard: { backgroundColor: '#fff', borderRadius: 12, paddingVertical: 20, paddingHorizontal: 26, width: 260 },
+    modalCard: { backgroundColor: theme.surface, borderRadius: 12, paddingVertical: 20, paddingHorizontal: 26, width: 260 },
     modalInputRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-    modalInput: { fontSize: scaled(40), textAlign: 'center', color: '#000', width: 120 },
-    signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' },
-    signToggleText: { fontSize: scaled(16), fontWeight: '700', color: '#000', textAlign: 'center' },    extraFieldRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
-    extraFieldLabel: { fontSize: scaled(14), fontWeight: '600', color: '#333', flex: 1 },
+    modalInput: { fontSize: scaled(40), textAlign: 'center', color: theme.text, width: 120 },
+    signToggle: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: theme.border, alignItems: 'center', justifyContent: 'center' },
+    signToggleText: { fontSize: scaled(16), fontWeight: '700', color: theme.text, textAlign: 'center', ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
+    extraFieldRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
+    extraFieldLabel: { fontSize: scaled(14), fontWeight: '600', color: theme.mutedText, flex: 1, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
     extraFieldInputGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    extraFieldInput: { borderBottomWidth: 1, borderColor: '#ccc', fontSize: scaled(18), textAlign: 'center', width: 55, color: '#000' },
-    stepperButton: { width: 26, height: 26, borderRadius: 6, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' },
-    stepperButtonText: { fontSize: scaled(16), fontWeight: '700', color: '#333', textAlign: 'center', includeFontPadding: false },    nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
-    modalTitle: { fontSize: scaled(16), fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: 12 },
-    nextButtonText: { fontWeight: '700', color: theme.accentText },
-    modalPlayerName: { fontSize: scaled(14), color: '#888', textAlign: 'center', marginBottom: 12 },
-    modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginBottom: 16 },
+    extraFieldInput: { borderBottomWidth: 1, borderColor: theme.border, fontSize: scaled(18), textAlign: 'center', width: 55, color: theme.text },
+    stepperButton: { width: 26, height: 26, borderRadius: 6, backgroundColor: theme.border, alignItems: 'center', justifyContent: 'center' },
+    stepperButtonText: { fontSize: scaled(16), fontWeight: '700', color: theme.text, textAlign: 'center', includeFontPadding: false, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
+    modalTitle: { fontSize: scaled(16), fontWeight: '700', color: theme.text, textAlign: 'center', marginBottom: 12, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
+    nextButton: { marginTop: 16, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: theme.accent },
+    nextButtonText: { fontWeight: '700', color: theme.accentText, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
+    modalPlayerName: { fontSize: scaled(14), color: theme.mutedText, textAlign: 'center', marginBottom: 12, ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}) },
+    modalDivider: { height: StyleSheet.hairlineWidth, backgroundColor: theme.border, marginBottom: 16 },
   });
 }
 
@@ -134,7 +135,7 @@ export default function ScorecardGrid({
   onMeldChange,
   onBonusChange,
   onCustomValueChange,
-  onAddPlayer,
+  //onAddPlayer,
   onAddRound,
   screenWidth,
   bottomInset = 0,
@@ -284,9 +285,9 @@ export default function ScorecardGrid({
               <Text style={styles.headerText} numberOfLines={1}>{p.name}</Text>
             </View>
           ))}
-          <Pressable style={[styles.addCell, { width: 48 }]} onPress={onAddPlayer}>
+          {/* <Pressable style={[styles.addCell, { width: 48 }]} onPress={onAddPlayer}>
             <Text style={styles.addText}>+</Text>
-          </Pressable>
+          </Pressable> */}
         </Animated.ScrollView>
       </View>
 
@@ -356,7 +357,7 @@ export default function ScorecardGrid({
                     </Pressable>
                   );
                 })}
-                <View style={{ width: 48 }} />
+                {/* <View style={{ width: 48 }} /> */}
               </View>
             ))}
             <View style={{ height: rowHeight }} />

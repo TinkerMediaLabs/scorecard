@@ -13,6 +13,8 @@ export interface ThemePalette {
   accentText: string;
   roundWinnerHighlight: string;
   backgroundImage?: ImageSourcePropType;
+  fontFamily?: string;
+  roundColumnSurface?: string;
 }
 
 export const THEMES: Record<Theme, ThemePalette> = {
@@ -48,7 +50,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     border: '#e6df8a',
     text: '#1a1a6e',
     mutedText: '#3b49bf',
-    accent: '#6a0dad',
+    accent: '#6a0dadB3',
     accentText: '#ffffff',
     roundWinnerHighlight: '#ffe98a',
   },
@@ -60,7 +62,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     border: '#2f5745',
     text: '#ffffff',
     mutedText: '#cfd8d3',
-    accent: '#ff8fd0',
+    accent: '#ff8fd0CC',
     accentText: '#1c3d2e',
     roundWinnerHighlight: '#28493a',
   },
@@ -68,15 +70,29 @@ export const THEMES: Record<Theme, ThemePalette> = {
     name: 'chalkboard2',
     label: 'Chalkboard 2',
     background: 'black',
-    surface: 'transparent',
+    surface: 'black',
     border: '#4e4e4e',
     text: '#ffffff',
     mutedText: '#cfd8d3',
     accent: '#7f7e7e',
     accentText: 'white',
-    roundWinnerHighlight: '#7f7f7f',
+    roundWinnerHighlight: '#7f7f7f4D',
     backgroundImage: require('../../assets/images/chalkboard.jpg'),
+    roundColumnSurface: 'transparent',
+  },
+  retro: {
+    name: 'retro',
+    label: 'Retro',
+    background: '#0d0221',
+    surface: '#1a0b2e',
+    border: '#3d1a5c',
+    text: '#00f0ff',
+    mutedText: '#8b7ec8',
+    accent: '#ff2e9a',
+    accentText: '#0d0221',
+    roundWinnerHighlight: '#2e0854',
+    fontFamily: 'PressStart2P',
   },
 };
 
-export const THEME_NAMES: Theme[] = ['whiteboard', 'midnight', 'legalPad', 'chalkboard', 'chalkboard2'];
+export const THEME_NAMES: Theme[] = ['whiteboard', 'midnight', 'legalPad', 'chalkboard', 'chalkboard2', 'retro'];

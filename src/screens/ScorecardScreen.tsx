@@ -51,7 +51,8 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   const darkTheme =
     card.settings.theme === 'chalkboard' ||
     card.settings.theme === 'chalkboard2' ||
-    card.settings.theme === 'midnight';
+    card.settings.theme === 'midnight' ||
+    card.settings.theme === 'retro';
 
   const persist = (updater: (prev: Scorecard) => Scorecard) => {
     setCard((prev) => {
@@ -327,7 +328,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         onMeldChange={handleMeldChange}
         onBonusChange={handleBonusChange}
         onCustomValueChange={handleCustomValueChange}
-        onAddPlayer={handleAddPlayer}
+        //onAddPlayer={handleAddPlayer}
         onAddRound={handleAddRound}
         screenWidth={SCREEN_WIDTH}
         showRoundWinner={card.settings.showRoundWinner}
