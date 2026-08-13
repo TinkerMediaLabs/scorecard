@@ -5,9 +5,12 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'r
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 
+import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
 import { THEMES, THEME_NAMES } from '../lib/themes';
 import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
 import { DEFAULT_SETTINGS, Player, ScorecardSettings } from '../types';
+
+
 
 type Props = {
   visible: boolean;
@@ -173,6 +176,15 @@ export default function PresetEditorModal({
             <Row label="Use Roman numerals" value={settings.useRomanNumerals} onValueChange={(v) => updateSettings({ useRomanNumerals: v })} />
             <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => updateSettings({ showRoundWinner: v })} />
             <Row label="Highlight Round Winners" value={settings.highlightRoundWinner} onValueChange={(v) => updateSettings({ highlightRoundWinner: v })} />
+          </Section>
+
+          <Section title="Text Size">
+            <ChipPicker
+              options={TEXT_SIZE_OPTIONS}
+              labels={TEXT_SIZE_LABELS}
+              value={settings.textSize}
+              onChange={(v) => updateSettings({ textSize: v })}
+            />
           </Section>
 
           <Section title="Theme">
