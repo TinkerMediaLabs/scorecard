@@ -1,9 +1,9 @@
 import { TextSize } from '../types';
 
 export const FONTS = {
-  regular: 'ChalkboardRegular',
-  bold: 'ChalkboardBold',
-  light: 'ChalkboardLight',
+  regular: 'FuzzyBubblesRegular',
+  bold: 'FuzzyBubblesBold',
+  light: 'FuzzyBubblesRegular',
 };
 
 export const TEXT_SIZE_OPTIONS: TextSize[] = ['standard', 'large', 'extraLarge'];

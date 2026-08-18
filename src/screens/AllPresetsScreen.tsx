@@ -91,7 +91,7 @@ export default function AllPresetsScreen({ navigation }: Props) {
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>←</Text>
         </Pressable>
         <Text style={styles.title}>All Presets</Text>
         <View style={{ width: 50 }} />
@@ -135,7 +135,7 @@ export default function AllPresetsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  backText: { fontSize: 16, fontWeight: '600', color: '#155843', width: 60 },
+  backText: { fontSize: 20, fontWeight: '600', color: '#155843', width: 60 },
   title: { fontSize: 20, fontWeight: '700' },
   list: { paddingBottom: 40 },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },

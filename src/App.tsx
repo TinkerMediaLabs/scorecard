@@ -33,11 +33,10 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-      ChalkboardBold: require('../assets/fonts/chalkboard-se-bold.ttf'),
-      ChalkboardRegular: require('../assets/fonts/chalkboard-se-regular.ttf'),
-      ChalkboardLight: require('../assets/fonts/chalkboard-se-light.ttf'),
-      PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
-    });
+    FuzzyBubblesRegular: require('../assets/fonts/fuzzy-bubbles-regular.ttf'),
+    FuzzyBubblesBold: require('../assets/fonts/fuzzy-bubbles-bold.ttf'),
+    PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
+  });
 
 useEffect(() => {
   if (fontsLoaded) {
