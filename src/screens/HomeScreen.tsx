@@ -4,6 +4,13 @@ import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
@@ -15,7 +22,6 @@ import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
 import { usePurchases } from '../contexts/PurchasesContext';
 import { useTour } from '../contexts/TourContext';
-
 import {
   clearAllData,
   clearHistory,
@@ -28,17 +34,8 @@ import {
 } from '../lib/storage';
 import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings } from '../types';
 
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
-
 const PRIVACY_POLICY_URL = 'https://www.tinkermedia.net/scorecard-app/privacy-policy/';
 const TERMS_OF_USE_URL = 'https://www.tinkermedia.net/scorecard-app/terms/';
-
 const MAX_RECENT_PRESETS = 4;
 const HEADER_ROW_HEIGHT = 36;
 const HEADER_COLLAPSE_DISTANCE = 60;
@@ -59,7 +56,6 @@ export default function HomeScreen({ navigation }: Props) {
   const { isUnlocked } = usePurchases();
   const newScorecardRef = useRef<View>(null);
   const newPresetRef = useRef<View>(null);
-
   const scrollY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -216,11 +212,10 @@ const handleSavePreset = async ({
   };
 
   const recentPresets = presets.slice(0, MAX_RECENT_PRESETS);
-  const hasMorePresets = presets.length > MAX_RECENT_PRESETS;
 
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
-     <Animated.View style={[styles.headerRow, headerAnimatedStyle]}>
+      <Animated.View style={[styles.headerRow, headerAnimatedStyle]}>
         <Text style={[styles.title, {fontSize: 22}]}>Let's Play!</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
           <Text style={[styles.menuIcon]}>Options</Text>
@@ -239,26 +234,14 @@ return (
         contentContainerStyle={styles.list}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
             <View style={styles.presetsSection}>
               <View style={styles.presetsHeaderRow}>
-                <Text style={styles.presetsTitle}>Presets</Text>
-                <View ref={newPresetRef} collapsable={false}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (!isUnlocked && presets.length >= 1) {
-                        navigation.navigate('Paywall');
-                        return;
-                      }
-                      setEditingPreset(null);
-                      setEditorVisible(true);
-                    }}
-                  >
-                    <Text style={styles.presetsAddLink}>+ New Preset</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Preset Scorecards</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('AllPresets')} hitSlop={8}>
+                  <Text style={styles.viewAllLink}>View All</Text>
+                </TouchableOpacity>
               </View>
 
               {recentPresets.length === 0 ? (
@@ -281,17 +264,24 @@ return (
                 ))
               )}
 
-              {hasMorePresets && (
+              <View ref={newPresetRef} collapsable={false}>
                 <TouchableOpacity
-                  style={styles.seeAllButton}
-                  onPress={() => navigation.navigate('AllPresets')}
+                  style={styles.newPresetTile}
+                  onPress={() => {
+                    if (!isUnlocked && presets.length >= 1) {
+                      navigation.navigate('Paywall');
+                      return;
+                    }
+                    setEditingPreset(null);
+                    setEditorVisible(true);
+                  }}
                 >
-                  <Text style={styles.seeAllText}>See All Presets</Text>
+                  <Text style={styles.newPresetTileText}>+ New Preset</Text>
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
 
-            <Text style={styles.scorecardsTitle}>Active Scorecards</Text>
+            <Text style={styles.sectionTitle}>Active Scorecards</Text>
           </>
         }
         ListEmptyComponent={<Text style={styles.empty}>No scorecards yet.</Text>}
@@ -318,7 +308,16 @@ return (
       />
 
       <BottomSheetModal visible={menuVisible} onClose={() => setMenuVisible(false)}>
-        
+
+           {/* {!isUnlocked && (
+          <SheetOption
+            label="Unlock Everything"
+            onPress={() => {
+              setMenuVisible(false);
+              navigation.navigate('Paywall');
+            }}
+          />
+        )} */}
         <SheetOption
           label="History"
           onPress={() => {
@@ -333,17 +332,7 @@ return (
             setManageDataVisible(true);
           }}
         />
-
-        {!isUnlocked && (
-          <SheetOption
-            label="Unlock Everything"
-            onPress={() => {
-              setMenuVisible(false);
-              navigation.navigate('Paywall');
-            }}
-          />
-        )}
-        
+     
         <SheetOption label="Privacy Policy" onPress={openPrivacyPolicy} />
         <SheetOption label="Terms of Use" onPress={openTermsOfUse} last />
       </BottomSheetModal>
@@ -409,7 +398,8 @@ function SheetOption({
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },  title: { fontSize: 28, fontWeight: '700' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },
+  title: { fontSize: 28, fontWeight: '700' },
   menuIcon: { fontSize: 16, fontWeight: '700', color: '#666666', paddingHorizontal: 8, letterSpacing: 1 },
   newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 24 },
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
@@ -417,12 +407,20 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
   presetsSection: { marginBottom: 24 },
   presetsHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  presetsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase' },
-  presetsAddLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1a1a1a', marginBottom: 10 },
+  viewAllLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
   presetsEmpty: { fontSize: 13, color: '#888' },
-  seeAllButton: { alignSelf: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 16 },
-  seeAllText: { fontSize: 14, fontWeight: '600', color: '#155843' },
-  scorecardsTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
+  newPresetTile: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#c9c9c9',
+    borderRadius: 10,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  newPresetTileText: { fontSize: 15, fontWeight: '600', color: '#155843' },
   sheetOption: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#eee' },
   sheetOptionLast: { borderBottomWidth: 0 },
   sheetOptionText: { fontSize: 16, fontWeight: '600', color: '#155843', textAlign: 'center' },

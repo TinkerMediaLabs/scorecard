@@ -42,7 +42,7 @@ export default function PresetListItem({ preset, onPress, onEdit, onDelete, onVi
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 10, padding: 16 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e6f2ee', borderRadius: 10, padding: 16 },
   cardName: { fontSize: 16, fontWeight: '600' },
   cardMeta: { fontSize: 13, color: '#666', marginTop: 4 },
 });
