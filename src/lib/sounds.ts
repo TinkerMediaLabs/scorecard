@@ -1,6 +1,6 @@
 import { DoneSound, TickerSound } from '../types';
 
-export const DONE_SOUND_OPTIONS: DoneSound[] = ['none', 'ting', 'rooster', 'whistle', 'doorbell', 'airHorn', 'trombone', 'meepMeep', 'tickTock', 'bomb'];
+export const DONE_SOUND_OPTIONS: DoneSound[] = ['none', 'ting', 'rooster', 'whistle', 'doorbell', 'airHorn', 'trombone', 'meepMeep', 'buzzer', 'bomb'];
 export const TICKER_SOUND_OPTIONS: TickerSound[] = ['none', 'clock', 'stopwatch', 'grandfather', 'waterTap', 'blood', 'warDrums'];
 
 export const DONE_SOUNDS: Record<Exclude<DoneSound, 'none'>, number> = {
@@ -11,7 +11,7 @@ export const DONE_SOUNDS: Record<Exclude<DoneSound, 'none'>, number> = {
   airHorn: require('../../assets/audio/done/AirHorn.mp3'),
   trombone: require('../../assets/audio/done/Trombone.mp3'),
   meepMeep: require('../../assets/audio/done/MeepMeep.mp3'),
-  tickTock: require('../../assets/audio/done/Ticktock.mp3'),
+  buzzer: require('../../assets/audio/done/Buzzer.mp3'),
   bomb: require('../../assets/audio/done/Bomb.mp3'),
 };
 
@@ -35,7 +35,7 @@ export const DONE_SOUND_LABELS: Record<DoneSound, string> = {
   airHorn: 'Air Horn',
   trombone: 'Trombone',
   meepMeep: 'Meep Meep',
-  tickTock: 'Tick Tock',
+  buzzer: 'Buzzer',
   bomb: 'Bomb',
 };
 
