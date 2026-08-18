@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import Text from '../components/AppText';
@@ -47,6 +47,11 @@ export default function SettingsModal({
 }: Props) {
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
+  const [roundSecondsText, setRoundSecondsText] = useState(String(settings.timerRoundSeconds));
+
+  useEffect(() => {
+    setRoundSecondsText(String(settings.timerRoundSeconds));
+  }, [settings.timerRoundSeconds]);
 
   const updateCustomField = (index: number, label: string) => {
     const next = [...(settings.customFields ?? [])];
@@ -208,10 +213,20 @@ export default function SettingsModal({
                   <Text style={styles.rowLabel}>Round length (seconds)</Text>
                   <TextInput
                     keyboardType="number-pad"
-                    value={String(settings.timerRoundSeconds)}
+                    value={roundSecondsText}
                     onChangeText={(text) => {
-                      const n = parseInt(text, 10);
-                      if (!Number.isNaN(n)) onUpdateSettings({ timerRoundSeconds: n });
+                      const digitsOnly = text.replace(/[^0-9]/g, '');
+                      setRoundSecondsText(digitsOnly);
+                      const n = parseInt(digitsOnly, 10);
+                      if (!Number.isNaN(n) && n > 0) {
+                        onUpdateSettings({ timerRoundSeconds: n });
+                      }
+                    }}
+                    onBlur={() => {
+                      const n = parseInt(roundSecondsText, 10);
+                      if (Number.isNaN(n) || n <= 0) {
+                        setRoundSecondsText(String(settings.timerRoundSeconds));
+                      }
                     }}
                     style={[styles.textInput, { width: 60, textAlign: 'center' }]}
                   />

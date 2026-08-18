@@ -6,6 +6,7 @@ import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 
 import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
+import { DONE_SOUND_LABELS, DONE_SOUND_OPTIONS, TICKER_SOUND_LABELS, TICKER_SOUND_OPTIONS } from '../lib/sounds';
 import { THEMES, THEME_NAMES } from '../lib/themes';
 import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
 import { DEFAULT_SETTINGS, Player, ScorecardSettings } from '../types';
@@ -32,11 +33,14 @@ export default function PresetEditorModal({
   const [name, setName] = useState('');
   const [settings, setSettings] = useState<ScorecardSettings>(DEFAULT_SETTINGS);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [roundSecondsText, setRoundSecondsText] = useState(String(DEFAULT_SETTINGS.timerRoundSeconds));
 
   useEffect(() => {
     if (visible) {
+      const nextSettings = initialSettings ?? DEFAULT_SETTINGS;
       setName(initialName ?? '');
-      setSettings(initialSettings ?? DEFAULT_SETTINGS);
+      setSettings(nextSettings);
+      setRoundSecondsText(String(nextSettings.timerRoundSeconds));
       setPlayers(
         initialPlayers && initialPlayers.length > 0
           ? initialPlayers
@@ -212,18 +216,48 @@ export default function PresetEditorModal({
             <Row label="Use Timer" value={settings.timerEnabled} onValueChange={(v) => updateSettings({ timerEnabled: v })} />
 
             {settings.timerEnabled && (
-              <View style={[styles.playerRow, { justifyContent: 'space-between' }]}>
-                <Text style={styles.rowLabel}>Round length (seconds)</Text>
-                <TextInput
-                  keyboardType="number-pad"
-                  value={String(settings.timerRoundSeconds)}
-                  onChangeText={(text) => {
-                    const n = parseInt(text, 10);
-                    if (!Number.isNaN(n)) updateSettings({ timerRoundSeconds: n });
-                  }}
-                  style={[styles.textInput, { width: 60, textAlign: 'center' }]}
+              <>
+                <View style={[styles.playerRow, { justifyContent: 'space-between' }]}>
+                  <Text style={styles.rowLabel}>Round length (seconds)</Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    value={roundSecondsText}
+                    onChangeText={(text) => {
+                      const digitsOnly = text.replace(/[^0-9]/g, '');
+                      setRoundSecondsText(digitsOnly);
+                      const n = parseInt(digitsOnly, 10);
+                      if (!Number.isNaN(n) && n > 0) {
+                        updateSettings({ timerRoundSeconds: n });
+                      }
+                    }}
+                    onBlur={() => {
+                      const n = parseInt(roundSecondsText, 10);
+                      if (Number.isNaN(n) || n <= 0) {
+                        setRoundSecondsText(String(settings.timerRoundSeconds));
+                      }
+                    }}
+                    style={[styles.textInput, { width: 60, textAlign: 'center' }]}
+                  />
+                </View>
+
+                <Row label="15 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => updateSettings({ timerWarningEnabled: v })} />
+
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Completion Sound</Text>
+                <ChipPicker
+                  options={DONE_SOUND_OPTIONS}
+                  labels={DONE_SOUND_LABELS}
+                  value={settings.timerDoneSound}
+                  onChange={(v) => updateSettings({ timerDoneSound: v })}
                 />
-              </View>
+
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Ticker Sound</Text>
+                <ChipPicker
+                  options={TICKER_SOUND_OPTIONS}
+                  labels={TICKER_SOUND_LABELS}
+                  value={settings.timerTickerSound}
+                  onChange={(v) => updateSettings({ timerTickerSound: v })}
+                />
+              </>
             )}
           </Section>
         </ScrollView>
