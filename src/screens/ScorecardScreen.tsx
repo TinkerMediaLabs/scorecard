@@ -263,15 +263,39 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{card.name}</Text>
         <View ref={editButtonRef} collapsable={false} style={{ marginRight: 12 }}>
           <Pressable onPress={() => setSettingsVisible(true)}>
-            <Text style={[styles.finishButton, { backgroundColor: 'transparent', color: theme.accent }]}>Edit</Text>
+            <Text
+              style={[
+                styles.finishButton,
+                {
+                  backgroundColor: theme.editButton.backgroundColor,
+                  color: theme.editButton.textColor,
+                  fontSize: theme.editButton.fontSize,
+                  fontWeight: theme.editButton.fontWeight,
+                },
+              ]}
+            >
+              Edit
+            </Text>
           </Pressable>
         </View>
         <View ref={finishButtonRef} collapsable={false}>
           <Pressable
             onPress={card.status === 'finished' ? () => setShowSummary(true) : finishScorecard}
-            style={[styles.finishButton, { backgroundColor: card.status === 'finished' ? 'transparent' : theme.accent}]}
+            style={[
+              styles.finishButton,
+              { backgroundColor: card.status === 'finished' ? 'transparent' : theme.finishButton.backgroundColor },
+            ]}
           >
-            <Text style={[styles.finishText, { color: card.status === 'finished' ? theme.accent : theme.accentText }]}>
+            <Text
+              style={[
+                styles.finishText,
+                {
+                  color: card.status === 'finished' ? theme.finishButton.backgroundColor : theme.finishButton.textColor,
+                  fontSize: theme.finishButton.fontSize,
+                  fontWeight: theme.finishButton.fontWeight,
+                },
+              ]}
+            >
               {card.status === 'finished' ? 'Completed' : 'Finish'}
             </Text>
           </Pressable>
@@ -362,6 +386,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
           winCondition={card.settings.winCondition}
           rounds={card.rounds}
           showRoundWinner={card.settings.showRoundWinner}
+          theme={theme}
         />
       )}
     </View>
@@ -374,5 +399,5 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1 },
   title: { fontSize: 18, fontWeight: '700', flex: 1 },
   finishButton: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 16 },
-  finishText: { fontWeight: '600' },
+  finishText: {},
 });

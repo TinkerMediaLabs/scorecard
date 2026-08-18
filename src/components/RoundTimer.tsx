@@ -107,25 +107,47 @@ export default function RoundTimer({ theme, roundSeconds, warningEnabled, doneSo
   const seconds = totalSeconds % 60;
   const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-  // Three states: idle (untouched), running (green, >10s left), low time (red, <=10s left)
   const isLowTime = isRunning && remainingMs <= LOW_TIME_AT_MS;
 
   const barBackgroundColor = isLowTime ? '#b31914' : isRunning ? '#198a2c' : theme.surface;
   const timeColor = isRunning ? '#ffffff' : theme.text;
-  const resetTextColor = isRunning ? '#ffffff' : theme.text;
+  const resetTextColor = isRunning ? '#ffffff' : theme.timerResetButton.textColor;
   const resetBorderColor = isRunning ? '#ffffff' : theme.border;
-  const toggleBackgroundColor = isLowTime ? '#000000' : theme.accent;
-  const toggleTextColor = isLowTime ? '#ffffff' : theme.accentText;
+  const toggleBackgroundColor = isLowTime ? '#000000' : theme.timerStartButton.backgroundColor;
+  const toggleTextColor = isLowTime ? '#ffffff' : theme.timerStartButton.textColor;
 
   return (
     <View style={[styles.container, { backgroundColor: barBackgroundColor, borderColor: theme.border }]}>
       <Text style={[styles.time, { color: timeColor }]}>{display}</Text>
       <View style={styles.buttons}>
         <Pressable onPress={toggle} style={[styles.button, { backgroundColor: toggleBackgroundColor }]}>
-          <Text style={[styles.buttonText, { color: toggleTextColor }]}>{isRunning ? 'Pause' : 'Start'}</Text>
+          <Text
+            style={{
+              color: toggleTextColor,
+              fontSize: theme.timerStartButton.fontSize,
+              fontWeight: theme.timerStartButton.fontWeight,
+            }}
+          >
+            {isRunning ? 'Pause' : 'Start'}
+          </Text>
         </Pressable>
-        <Pressable onPress={reset} style={[styles.button, styles.resetButton, { borderColor: resetBorderColor }]}>
-          <Text style={[styles.buttonText, { color: resetTextColor }]}>Reset</Text>
+        <Pressable
+          onPress={reset}
+          style={[
+            styles.button,
+            styles.resetButton,
+            { borderColor: resetBorderColor, backgroundColor: theme.timerResetButton.backgroundColor },
+          ]}
+        >
+          <Text
+            style={{
+              color: resetTextColor,
+              fontSize: theme.timerResetButton.fontSize,
+              fontWeight: theme.timerResetButton.fontWeight,
+            }}
+          >
+            Reset
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -137,6 +159,5 @@ const styles = StyleSheet.create({
   time: { fontSize: 24, fontWeight: '700' },
   buttons: { flexDirection: 'row' },
   button: { paddingVertical: 6, paddingHorizontal: 34, borderRadius: 8, marginLeft: 8 },
-  resetButton: { backgroundColor: 'transparent', borderWidth: 1 },
-  buttonText: { fontWeight: '600' },
+  resetButton: { borderWidth: 1 },
 });

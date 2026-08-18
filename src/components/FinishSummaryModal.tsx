@@ -13,6 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
+import { ThemePalette } from '../lib/themes';
 import { Player, Round, WinCondition } from '../types';
 import Text from './AppText';
 import RecapShareCard, { RecapLeaderboardEntry } from './RecapShareCard';
@@ -34,6 +35,7 @@ type Props = {
   winCondition: WinCondition;
   rounds: Round[];
   showRoundWinner: boolean;
+  theme: ThemePalette;
 };
 
 export default function FinishSummaryModal({
@@ -46,6 +48,7 @@ export default function FinishSummaryModal({
   winCondition,
   rounds,
   showRoundWinner,
+  theme,
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
@@ -88,7 +91,6 @@ export default function FinishSummaryModal({
     transform: [{ translateY: translateY.value }],
   }));
 
-  // Random burst points scattered across the screen, regenerated each time the modal opens
   const randomOrigins = useMemo(() => {
     return Array.from({ length: ORIGIN_COUNT }).map(() => ({
       x: Math.random() * SCREEN_W,
@@ -191,8 +193,23 @@ export default function FinishSummaryModal({
             </GestureDetector>
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-              <Pressable style={styles.shareButton} onPress={handleShare} disabled={sharing}>
-                <Text style={styles.shareButtonText}>{sharing ? 'Preparing…' : '↗ Share Recap'}</Text>
+              <Pressable
+                style={[styles.shareButton, { backgroundColor: theme.shareButton.backgroundColor }]}
+                onPress={handleShare}
+                disabled={sharing}
+              >
+                <Text
+                  style={[
+                    styles.shareButtonText,
+                    {
+                      color: theme.shareButton.textColor,
+                      fontSize: theme.shareButton.fontSize,
+                      fontWeight: theme.shareButton.fontWeight,
+                    },
+                  ]}
+                >
+                  {sharing ? 'Preparing…' : '↗ Share Recap'}
+                </Text>
               </Pressable>
 
               <View style={styles.plaqueOuter}>
@@ -268,8 +285,8 @@ const styles = StyleSheet.create({
   dragHandleArea: { alignItems: 'center', paddingVertical: 12 },
   dragHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#ddd' },
   content: { paddingHorizontal: 20, paddingBottom: 10 },
-  shareButton: { alignSelf: 'flex-end', marginBottom: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#f0f0f0' },
-  shareButtonText: { fontSize: 13, fontWeight: '700', color: '#155843' },
+  shareButton: { alignSelf: 'flex-end', marginBottom: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
+  shareButtonText: {},
   plaqueOuter: {
     backgroundColor: '#D4AF37',
     borderRadius: 18,
