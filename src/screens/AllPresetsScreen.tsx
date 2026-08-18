@@ -9,20 +9,26 @@ import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
-import { deletePreset, listPresets, savePreset, saveScorecard } from '../lib/storage';
+import { usePurchases } from '../contexts/PurchasesContext';
+import { deletePreset, listPresets, loadAllScorecards, savePreset, saveScorecard } from '../lib/storage';
 import { DEFAULT_PRESET_STATS, Preset, Scorecard, ScorecardSettings } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AllPresets'>;
 
 export default function AllPresetsScreen({ navigation }: Props) {
   const [presets, setPresets] = useState<Preset[]>([]);
+  const [activeScorecardCount, setActiveScorecardCount] = useState(0);
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const insets = useSafeAreaInsets();
+  const { isUnlocked } = usePurchases();
 
   const reload = useCallback(() => {
     listPresets().then((all) =>
       setPresets([...all].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+    );
+    loadAllScorecards().then((cards) =>
+      setActiveScorecardCount(cards.filter((c) => c.status === 'active').length)
     );
   }, []);
 
@@ -33,6 +39,10 @@ export default function AllPresetsScreen({ navigation }: Props) {
   );
 
   const createFromPreset = async (preset: Preset) => {
+    if (!isUnlocked && activeScorecardCount >= 1) {
+      navigation.navigate('Paywall');
+      return;
+    }
     const now = new Date().toISOString();
     const newCard: Scorecard = {
       id: Crypto.randomUUID(),

@@ -13,7 +13,9 @@ import Coachmark from '../components/Coachmark';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
+import { usePurchases } from '../contexts/PurchasesContext';
 import { useTour } from '../contexts/TourContext';
+
 import {
   clearAllData,
   clearHistory,
@@ -54,6 +56,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [manageDataVisible, setManageDataVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const tour = useTour();
+  const { isUnlocked } = usePurchases();
   const newScorecardRef = useRef<View>(null);
   const newPresetRef = useRef<View>(null);
 
@@ -90,6 +93,10 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   const createNewScorecard = async () => {
+    if (!isUnlocked && scorecards.length >= 1) {
+      navigation.navigate('Paywall');
+      return;
+    }
     const now = new Date().toISOString();
     const newCard: Scorecard = {
       id: Crypto.randomUUID(),
@@ -109,6 +116,10 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
  const createFromPreset = async (preset: Preset) => {
+    if (!isUnlocked && scorecards.length >= 1) {
+      navigation.navigate('Paywall');
+      return;
+    }
     const now = new Date().toISOString();
     const newCard: Scorecard = {
       id: Crypto.randomUUID(),
@@ -237,6 +248,10 @@ return (
                 <View ref={newPresetRef} collapsable={false}>
                   <TouchableOpacity
                     onPress={() => {
+                      if (!isUnlocked && presets.length >= 1) {
+                        navigation.navigate('Paywall');
+                        return;
+                      }
                       setEditingPreset(null);
                       setEditorVisible(true);
                     }}
@@ -303,6 +318,7 @@ return (
       />
 
       <BottomSheetModal visible={menuVisible} onClose={() => setMenuVisible(false)}>
+        
         <SheetOption
           label="History"
           onPress={() => {
@@ -317,6 +333,17 @@ return (
             setManageDataVisible(true);
           }}
         />
+
+        {!isUnlocked && (
+          <SheetOption
+            label="Unlock Everything"
+            onPress={() => {
+              setMenuVisible(false);
+              navigation.navigate('Paywall');
+            }}
+          />
+        )}
+        
         <SheetOption label="Privacy Policy" onPress={openPrivacyPolicy} />
         <SheetOption label="Terms of Use" onPress={openTermsOfUse} last />
       </BottomSheetModal>

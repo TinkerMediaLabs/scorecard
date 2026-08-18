@@ -9,10 +9,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AllPresetsScreen from './screens/AllPresetsScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import HomeScreen from './screens/HomeScreen';
+import PaywallScreen from './screens/PaywallScreen';
 import PresetStatsScreen from './screens/PresetStatsScreen';
 import ScorecardScreen from './screens/ScorecardScreen';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PurchasesProvider } from './contexts/PurchasesContext';
 import { TourProvider } from './contexts/TourContext';
 
 
@@ -22,6 +24,7 @@ export type RootStackParamList = {
   History: undefined;
   PresetStats: { presetId: string };
   AllPresets: undefined;
+  Paywall: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,17 +49,20 @@ useEffect(() => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
-        <TourProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Home" component={HomeScreen} />
-              <Stack.Screen name="Scorecard" component={ScorecardScreen} />
-              <Stack.Screen name="History" component={HistoryScreen} />
-              <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
-              <Stack.Screen name="AllPresets" component={AllPresetsScreen} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </TourProvider>
+        <PurchasesProvider>
+          <TourProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="Scorecard" component={ScorecardScreen} />
+                <Stack.Screen name="History" component={HistoryScreen} />
+                <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
+                <Stack.Screen name="AllPresets" component={AllPresetsScreen} />
+                <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </TourProvider>
+        </PurchasesProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
