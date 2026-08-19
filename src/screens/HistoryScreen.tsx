@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
@@ -40,7 +41,7 @@ export default function HistoryScreen({ navigation }: Props) {
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <Text style={{ fontSize: 20 }}>←</Text>
+           <MaterialCommunityIcons name="arrow-left" size={24} style={styles.arrow} />
         </Pressable>
         <Text style={styles.title}>History</Text>
       </View>
@@ -69,4 +70,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700' },
   list: { paddingBottom: 20 },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
+  arrow: {marginRight: 10},
 });

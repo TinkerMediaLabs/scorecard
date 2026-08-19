@@ -28,7 +28,9 @@ export interface ThemePalette {
   roundWinnerHighlight: string;
   backgroundImage?: ImageSourcePropType;
   fontFamily?: string;
+  fontFamilyBold?: string;
   roundColumnSurface?: string;
+  arrow: { color: string };
 
   // Buttons — each is independently adjustable, no longer all tied to `accent`.
   editButton: ButtonPalette;
@@ -58,6 +60,8 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accent: '#155843',
     accentText: '#ffffff',
     roundWinnerHighlight: '#e8e8e8',
+    arrow: {color: '#000'},
+    fontFamilyBold: 'FuzzyBubblesBold',
 
     editButton: { backgroundColor: 'transparent', textColor: '#155843', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#155843', textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
@@ -82,6 +86,9 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accent: '#00e5ff',
     accentText: '#000000',
     roundWinnerHighlight: '#242424',
+    arrow: {color: '#fff'},
+    fontFamily: 'SpaceMonoRegular',
+    fontFamilyBold: 'SpaceMonoBold',
 
     editButton: { backgroundColor: 'transparent', textColor: '#00e5ff', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#00e5ff', textColor: '#000000', fontSize: 14, fontWeight: '600' },
@@ -106,6 +113,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accent: '#6a0dadB3',
     accentText: '#ffffff',
     roundWinnerHighlight: '#ffe98a',
+    fontFamilyBold: 'FuzzyBubblesBold',
 
     editButton: { backgroundColor: 'transparent', textColor: '#6a0dadB3', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#6a0dadB3', textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
@@ -118,6 +126,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     shareButton: { backgroundColor: '#f0f0f0', textColor: '#155843', fontSize: 13, fontWeight: '700' },
     scoreInput: { backgroundColor: '#fff9a0', textColor: '#1a1a6e', fontSize: 40, fontWeight: 'normal' },
     extraFieldInput: { backgroundColor: 'transparent', textColor: '#1a1a6e', fontSize: 18, fontWeight: 'normal' },
+    arrow: {color: '#1a1a6e'},
   },
   chalkboard: {
     name: 'chalkboard',
@@ -130,6 +139,8 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accent: '#ff8fd0CC',
     accentText: '#1c3d2e',
     roundWinnerHighlight: '#28493a',
+    arrow: {color: '#ff8fd0CC'},
+    fontFamilyBold: 'FuzzyBubblesBold',
 
     editButton: { backgroundColor: 'transparent', textColor: '#ff8fd0CC', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#ff8fd0CC', textColor: '#1c3d2e', fontSize: 14, fontWeight: '600' },
@@ -151,18 +162,20 @@ export const THEMES: Record<Theme, ThemePalette> = {
     border: '#4e4e4e',
     text: '#ffffff',
     mutedText: '#cfd8d3',
-    accent: '#7f7e7e',
+    accent: '#7f7f7f4D',
     accentText: 'white',
     roundWinnerHighlight: '#7f7f7f4D',
     backgroundImage: require('../../assets/images/chalkboard.jpg'),
     roundColumnSurface: 'transparent',
+    arrow: {color: '#fff'},
+    fontFamilyBold: 'FuzzyBubblesBold',
 
-    editButton: { backgroundColor: 'transparent', textColor: '#7f7e7e', fontSize: 14, fontWeight: 'normal' },
-    finishButton: { backgroundColor: '#7f7e7e', textColor: 'white', fontSize: 14, fontWeight: '600' },
+    editButton: { backgroundColor: 'transparent', textColor: '#cccccc', fontSize: 14, fontWeight: 'normal' },
+    finishButton: { backgroundColor: '#4e4e4e', textColor: 'white', fontSize: 14, fontWeight: '600' },
     timerStartButton: { backgroundColor: '#7f7e7e', textColor: 'white', fontSize: 15, fontWeight: '600' },
     timerResetButton: { backgroundColor: 'transparent', textColor: '#ffffff', fontSize: 15, fontWeight: '600' },
-    addRoundButton: { backgroundColor: 'transparent', textColor: '#7f7e7e', fontSize: 20, fontWeight: 'normal' },
-    modalNextButton: { backgroundColor: '#7f7e7e', textColor: 'white', fontSize: 14, fontWeight: '700' },
+    addRoundButton: { backgroundColor: 'transparent', textColor: '#c9c9c9', fontSize: 20, fontWeight: 'normal' },
+    modalNextButton: { backgroundColor: '#4e4e4e', textColor: 'white', fontSize: 14, fontWeight: '700' },
     modalSignToggleButton: { backgroundColor: '#4e4e4e', textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
     modalStepperButton: { backgroundColor: '#4e4e4e', textColor: '#ffffff', fontSize: 16, fontWeight: '700' },
     shareButton: { backgroundColor: '#f0f0f0', textColor: '#155843', fontSize: 13, fontWeight: '700' },
@@ -180,9 +193,11 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accent: '#ff2e9a',
     accentText: '#0d0221',
     roundWinnerHighlight: '#2e0854',
-    fontFamily: 'PressStart2P',
+    fontFamily: 'SilkscreenRegular',
+    arrow: {color: '#ff2e9a'},
+    fontFamilyBold: 'SilkscreenBold',
 
-    editButton: { backgroundColor: 'transparent', textColor: '#ff2e9a', fontSize: 14, fontWeight: 'normal' },
+    editButton: { backgroundColor: 'transparent', textColor: '#ff2e9a', fontSize: 14, fontWeight: 'normal',  },
     finishButton: { backgroundColor: '#ff2e9a', textColor: '#0d0221', fontSize: 14, fontWeight: '600' },
     timerStartButton: { backgroundColor: '#ff2e9a', textColor: '#0d0221', fontSize: 15, fontWeight: '600' },
     timerResetButton: { backgroundColor: 'transparent', textColor: '#00f0ff', fontSize: 15, fontWeight: '600' },

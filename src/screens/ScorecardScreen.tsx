@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -258,9 +259,9 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         ]}
       >
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <Text style={{ fontSize: 20, color: theme.text }}>←</Text>
+          <MaterialCommunityIcons name="arrow-left" size={20} style={[styles.arrow, { color: theme.arrow.color }]} />
         </Pressable>
-        <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{card.name}</Text>
+        <Text style={[styles.title, { color: theme.text, fontFamily: theme.fontFamily, }]} numberOfLines={1}>{card.name}</Text>
         <View ref={editButtonRef} collapsable={false} style={{ marginRight: 12 }}>
           <Pressable onPress={() => setSettingsVisible(true)}>
             <Text
@@ -271,6 +272,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
                   color: theme.editButton.textColor,
                   fontSize: theme.editButton.fontSize,
                   fontWeight: theme.editButton.fontWeight,
+                  fontFamily: theme.fontFamily,
                 },
               ]}
             >
@@ -293,10 +295,11 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
                   color: card.status === 'finished' ? theme.finishButton.backgroundColor : theme.finishButton.textColor,
                   fontSize: theme.finishButton.fontSize,
                   fontWeight: theme.finishButton.fontWeight,
+                  fontFamily: theme.fontFamily,
                 },
               ]}
             >
-              {card.status === 'finished' ? 'Completed' : 'Finish'}
+              {card.status === 'finished' ? 'Completed' : 'End'}
             </Text>
           </Pressable>
         </View>
@@ -399,5 +402,6 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1 },
   title: { fontSize: 18, fontWeight: '700', flex: 1 },
   finishButton: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 16 },
-  finishText: {},
+  finishText: {fontFamily: 'FuzzyBubblesBold'},
+  arrow: {marginRight: 10},
 });

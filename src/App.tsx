@@ -35,7 +35,10 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     FuzzyBubblesRegular: require('../assets/fonts/fuzzy-bubbles-regular.ttf'),
     FuzzyBubblesBold: require('../assets/fonts/fuzzy-bubbles-bold.ttf'),
-    PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
+    SilkscreenRegular: require('../assets/fonts/Silkscreen-Regular.ttf'),
+    SilkscreenBold: require('../assets/fonts/Silkscreen-Bold.ttf'),
+    SpaceMonoRegular: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMonoBold: require('../assets/fonts/SpaceMono-Bold.ttf'),
   });
 
 useEffect(() => {

@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -91,9 +92,9 @@ export default function AllPresetsScreen({ navigation }: Props) {
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
-          <Text style={styles.backText}>←</Text>
+          <MaterialCommunityIcons name="arrow-left" size={24} style={styles.arrow} />
         </Pressable>
-        <Text style={styles.title}>All Presets</Text>
+        <Text style={styles.title}>Preset Scorecards</Text>
         <View style={{ width: 50 }} />
       </View>
 
@@ -102,7 +103,7 @@ export default function AllPresetsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<Text style={styles.empty}>No presets yet.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>No preset scorecards yet.</Text>}
         renderItem={({ item }) => (
           <PresetListItem
             preset={item}
@@ -134,9 +135,10 @@ export default function AllPresetsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  backText: { fontSize: 20, fontWeight: '600', color: '#155843', width: 60 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0, marginBottom: 20},
+  backText: { fontSize: 20, fontWeight: '600', color: '#155843' },
   title: { fontSize: 20, fontWeight: '700' },
+  arrow: {marginRight: 10},
   list: { paddingBottom: 40 },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
 });

@@ -70,7 +70,10 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
     >
      <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <Text style={{ fontSize: 20, color: theme.text }}>←</Text>
+          {/* <Text style={{ fontSize: 20, color: theme.text }}>←</Text> */}
+     
+              <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
+      
         </Pressable>
         <Text style={[styles.title, fontStyle, { color: theme.text }]} numberOfLines={1}>
           {preset.name}
@@ -80,9 +83,9 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content}>
         {stats.gamesPlayed === 0 ? (
           <View style={styles.emptyState}>
-            <View style={[styles.emptyIconCircle, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            {/* <View style={[styles.emptyIconCircle, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <MaterialCommunityIcons name="chart-bar" size={28} color={theme.mutedText} />
-            </View>
+            </View> */}
             <Text style={[styles.emptyTitle, fontStyle, { color: theme.text }]}>No stats yet</Text>
             <Text style={[styles.empty, fontStyle, { color: theme.mutedText }]}>
               Finish a scorecard created from this preset and its stats will show up here.
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   title: { fontSize: 24, fontWeight: '700', flexShrink: 1 },  content: { paddingHorizontal: 20, paddingBottom: 40 },
-  emptyState: { alignItems: 'center', marginTop: 60, paddingHorizontal: 20 },
+  emptyState: { alignItems: 'center', marginTop: 180, paddingHorizontal: 20 },
   emptyIconCircle: {
     width: 64,
     height: 64,

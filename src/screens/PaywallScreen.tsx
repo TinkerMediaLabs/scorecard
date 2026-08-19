@@ -17,24 +17,24 @@ const BENEFITS: {
   description: string;
 }[] = [
   {
-    icon: 'pencil',
+    icon: 'check',
     title: 'Unlimited active scorecards',
-    description: 'Work on as many games as you want.',
+    description: '',
   },
   {
-    icon: 'bookmark',
-    title: 'Unlimited saved presets',
-    description: 'Save as many presets as you need.',
+    icon: 'check',
+    title: 'Unlimited preset scorecards',
+    description: '',
   },
   {
-    icon: 'dollar',
-    title: 'One payment, yours forever',
-    description: "No subscription. Pay once and it's yours.",
+    icon: 'check',
+    title: 'Apply scorecard themes',
+    description: "",
   },
   {
-    icon: 'refresh',
-    title: 'Supports future updates',
-    description: 'Get new features as they’re released.',
+    icon: 'check',
+    title: 'Includes all future updates',
+    description: '',
   },
 ];
 
@@ -79,33 +79,37 @@ export default function PaywallScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <Text style={styles.backArrow}>←</Text>
+         <MaterialCommunityIcons name="arrow-left" size={24} style={styles.arrow} />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.iconCircle}>
+        {/* <View style={styles.iconCircle}>
           <FontAwesome name="unlock-alt" size={44} color="#155843" />
-        </View>
+        </View> */}
 
-        <Text style={styles.title}>
-          <Text style={styles.titleAccent}>Unlock</Text>
-          <Text style={styles.titleBlack}> Everything</Text>
+        <Text style={styles.title}>Unlock Everything
+          {/* <Text style={styles.titleAccent}>Unlimited scorecards</Text> */}
+          {/* <Text style={styles.titleBlack}> Everything for </Text> */}
+          {/* <Text style={styles.titleAccent}>{priceString ? ` – ${priceString}` : '$1.99'}</Text> */}
+          
         </Text>
-        <Text style={styles.subtitle}>
-          The free version keeps things to one active scorecard and one preset at a time.
-        </Text>
+        <Text style={styles.titleAccent}>{priceString ? ` – ${priceString}` : '$1.99'}</Text>
+        
+        {/* <Text style={styles.subtitle}>
+          Access to unlimited scorecards.
+        </Text> */}
 
         <View style={styles.card}>
           {BENEFITS.map((benefit, i) => (
             <View key={benefit.title}>
               <View style={styles.benefitRow}>
-                <View style={styles.benefitIconCircle}>
+                {/* <View style={styles.benefitIconCircle}>
                   <FontAwesome name={benefit.icon} size={20} color="#155843" />
-                </View>
+                </View> */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.benefitTitle}>{benefit.title}</Text>
-                  <Text style={styles.benefitDescription}>{benefit.description}</Text>
+                  {/* <Text style={styles.benefitDescription}>{benefit.description}</Text> */}
                 </View>
               </View>
               {i < BENEFITS.length - 1 && <View style={styles.divider} />}
@@ -142,7 +146,7 @@ export default function PaywallScreen({ navigation }: Props) {
 
         <View style={styles.secureRow}>
           <MaterialCommunityIcons name="shield-check-outline" size={16} color="#666" style={{ marginRight: 6 }} />
-          <Text style={styles.secureText}>Secure one-time payment</Text>
+          <Text style={styles.secureText}>Secure one-time purchase</Text>
         </View>
 
         {/* <Pressable onPress={handleRestore} disabled={busy !== null} style={styles.restoreButton}>
@@ -166,15 +170,15 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
     borderRadius: 54,
-    backgroundColor: '#e6f2ee',
+    //backgroundColor: '#e6f2ee',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   title: { fontSize: 32, fontWeight: '800', marginBottom: 14, textAlign: 'center' },
-  titleAccent: { color: '#155843' },
+  titleAccent: { color: '#155843', fontSize: 42, fontWeight: '800', marginBottom: 14, textAlign: 'center' },
   titleBlack: { color: '#000' },
-  subtitle: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  subtitle: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24, marginTop: 16 },
   card: {
     width: '100%',
     backgroundColor: '#fff',
@@ -186,23 +190,23 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  benefitRow: { flexDirection: 'row', alignItems: 'center' },
+  benefitRow: {  alignItems: 'center' },
   benefitIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#e6f2ee',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
-  benefitTitle: { fontSize: 15, fontWeight: '700', color: '#111' },
+  benefitTitle: { fontSize: 15, fontWeight: '700', color: '#111', marginVertical: 10 },
   benefitDescription: { fontSize: 13, color: '#777', marginTop: 2 },
   divider: { height: 1, backgroundColor: '#eee', marginVertical: 14 },
   footer: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    borderTopWidth: 1,
+    //borderTopWidth: 1,
     borderTopColor: '#eee',
     backgroundColor: '#fff',
   },
@@ -226,4 +230,5 @@ const styles = StyleSheet.create({
   secureText: { fontSize: 13, color: '#666' },
   restoreButton: { paddingVertical: 20, alignItems: 'center' },
   restoreButtonText: { color: '#155843', fontSize: 14, fontWeight: '600' },
+    arrow: {marginRight: 10},
 });
