@@ -301,7 +301,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
               style={[
                 styles.finishText,
                 {
-                  color: card.status === 'finished' ? theme.finishButton.backgroundColor : theme.finishButton.textColor,
+                  color: card.status === 'finished' ? theme.editButton.textColor : theme.finishButton.textColor,
                   fontSize: theme.finishButton.fontSize,
                   fontWeight: theme.finishButton.fontWeight,
                   fontFamily: theme.fontFamily,
@@ -326,7 +326,7 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
       <Coachmark
         visible={tour.active && tour.step === 'finishScorecard'}
         targetRef={finishButtonRef}
-        text="When the game is over, tap Finish to lock in the results and see the recap."
+        text="When the game is over, tap End to lock in the results and see the recap."
         stepLabel={`Step ${tour.stepIndex + 1} of ${tour.totalSteps}`}
         isLast
         onNext={tour.next}

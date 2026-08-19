@@ -204,11 +204,19 @@ function RecordCard({
   return (
     <View style={styles.recordCardShadowWrapper}>
       <View style={[styles.recordCard, { backgroundColor: theme.surface }]}>
-        <ImageBackground source={ribbonImage} resizeMode="cover" style={styles.ribbon} imageStyle={styles.ribbonImage}>
-          <View style={styles.ribbonBadge}>
-            <MaterialCommunityIcons name={icon} size={20} color={RIBBON_ICON_COLOR} />
-          </View>
-        </ImageBackground>
+        {/* {theme.name === 'whiteboard' ? (
+          <ImageBackground source={ribbonImage} resizeMode="cover" style={styles.ribbon} imageStyle={styles.ribbonImage}>
+            <View style={styles.ribbonBadge}>
+              <MaterialCommunityIcons name={icon} size={20} color={RIBBON_ICON_COLOR} />
+            </View>
+          </ImageBackground>
+        ) : ( */}
+          {/* <View style={[styles.ribbon, styles.ribbonPlain, { backgroundColor: lightenHex(theme.accent, 0.75) }]}>
+            <View style={styles.ribbonBadge}>
+              <MaterialCommunityIcons name={icon} size={20} color={theme.accent} />
+            </View>
+          </View> */}
+        {/* )} */}
         <View style={styles.recordBody}>
           <Text style={[styles.recordTitle, fontStyle, { color: theme.accent }]}>{title}</Text>
           <Text style={[styles.recordValue, fontStyle, { color: theme.text }]}>{record.value}</Text>
@@ -276,6 +284,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   ribbon: { width: 96, alignItems: 'center', paddingTop: 20 },
+  ribbonPlain: { justifyContent: 'center', paddingTop: 0 },
   ribbonImage: { resizeMode: 'cover' },
   ribbonBadge: {
     width: 44,

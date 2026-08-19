@@ -58,6 +58,10 @@ export default function FinishSummaryModal({
   const isRoundsMode = winCondition === 'mostRoundsWon';
   const lowestScoreWins = winCondition === 'leastPoints';
 
+  const regularFont = theme.fontFamily ? { fontFamily: theme.fontFamily } : {};
+  const boldFontFamily = theme.fontFamilyBold ?? theme.fontFamily;
+  const boldFont = boldFontFamily ? { fontFamily: boldFontFamily } : {};
+
   useEffect(() => {
     if (visible) {
       translateY.value = CARD_OFFSCREEN_Y;
@@ -175,20 +179,12 @@ export default function FinishSummaryModal({
         <View style={styles.backdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={closeAnimated} />
 
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <PIConfetti autoplay sprayDuration={CONFETTI_DURATION} containerStyle={{ flex: 1 }}>
-              {randomOrigins.map((origin, i) => (
-                <PIConfetti.Origin key={i} blastPosition={origin} count={120} initialSpeed={2.4} spread={Math.PI * 2}>
-                  <PIConfetti.Flake size={10} radius={3} />
-                </PIConfetti.Origin>
-              ))}
-            </PIConfetti>
-          </View>
-
-          <Animated.View style={[styles.card, cardStyle, { paddingBottom: insets.bottom + 10 }]}>
+          <Animated.View
+            style={[styles.card, cardStyle, { paddingBottom: insets.bottom + 10, backgroundColor: theme.surface }]}
+          >
             <GestureDetector gesture={pan}>
               <View style={styles.dragHandleArea}>
-                <View style={styles.dragHandle} />
+                <View style={[styles.dragHandle, { backgroundColor: theme.border }]} />
               </View>
             </GestureDetector>
 
@@ -206,23 +202,32 @@ export default function FinishSummaryModal({
                       fontSize: theme.shareButton.fontSize,
                       fontWeight: theme.shareButton.fontWeight,
                     },
+                    boldFont,
                   ]}
                 >
                   {sharing ? 'Preparing…' : '↗ Share Recap'}
                 </Text>
               </Pressable>
 
-              <View style={styles.plaqueOuter}>
-                <View style={styles.plaqueInner}>
+              <View style={[styles.plaqueOuter, { backgroundColor: theme.accent }]}>
+                <View style={[styles.plaqueInner, { backgroundColor: theme.surface, borderColor: theme.accent }]}>
                   <Text style={styles.trophy}>🏆</Text>
-                  <Text style={styles.winnerLabel}>WINNER</Text>
-                  <Text style={styles.winnerName}>{players[winnerIndex]?.name}</Text>
-                  <View style={styles.plaqueDivider} />
+                  <Text style={[styles.winnerLabel, { color: theme.accent }, boldFont]}>WINNER</Text>
+                  <Text style={[styles.winnerName, { color: theme.text }, boldFont]}>{players[winnerIndex]?.name}</Text>
+                  <View style={[styles.plaqueDivider, { backgroundColor: theme.accent }]} />
                   {!isRoundsMode && (
-                    <Text style={styles.winnerStat}>{totals[winnerIndex]} Points</Text>
+                    <Text style={[styles.winnerStat, { color: theme.mutedText }, regularFont]}>
+                      {totals[winnerIndex]} Points
+                    </Text>
                   )}
                   {(isRoundsMode || showRoundWinner) && (
-                    <Text style={[styles.winnerStat, isRoundsMode && styles.winnerStatEmphasis]}>
+                    <Text
+                      style={[
+                        styles.winnerStat,
+                        { color: theme.mutedText },
+                        isRoundsMode ? [styles.winnerStatEmphasis, boldFont, { color: theme.accent }] : regularFont,
+                      ]}
+                    >
                       {roundWinsCount[winnerIndex]} Rounds Won
                     </Text>
                   )}
@@ -230,32 +235,63 @@ export default function FinishSummaryModal({
               </View>
 
               {rest.map((r) => (
-                <View key={r.player.id} style={styles.restRow}>
-                  <Text style={styles.restName}>{r.player.name}</Text>
-                  <Text style={styles.restTotal}>{isRoundsMode ? `${r.wins} wins` : `${r.total} points`}</Text>
+                <View key={r.player.id} style={[styles.restRow, { borderColor: theme.border }]}>
+                  <Text style={[styles.restName, { color: theme.text }, regularFont]}>{r.player.name}</Text>
+                  <Text style={[styles.restTotal, { color: theme.mutedText }, regularFont]}>
+                    {isRoundsMode ? `${r.wins} wins` : `${r.total} points`}
+                  </Text>
                 </View>
               ))}
 
               <View style={styles.statsGrid}>
-                <View style={styles.statTile}>
-                  <Text style={styles.statValue}>{roundsPlayed}</Text>
-                  <Text style={styles.statLabel}>Rounds Played</Text>
+                <View
+                  style={[
+                    styles.statTile,
+                    { backgroundColor: theme.background, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: theme.text }, boldFont]}>{roundsPlayed}</Text>
+                  <Text style={[styles.statLabel, { color: theme.mutedText }, regularFont]}>Rounds Played</Text>
                 </View>
-                <View style={styles.statTile}>
-                  <Text style={styles.statValue}>{totalPointsScored}</Text>
-                  <Text style={styles.statLabel}>Total Points Scored</Text>
+                <View
+                  style={[
+                    styles.statTile,
+                    { backgroundColor: theme.background, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: theme.text }, boldFont]}>{totalPointsScored}</Text>
+                  <Text style={[styles.statLabel, { color: theme.mutedText }, regularFont]}>Total Points Scored</Text>
                 </View>
-                <View style={styles.statTile}>
-                  <Text style={styles.statValue}>{stdDev}</Text>
-                  <Text style={styles.statLabel}>Standard Deviation</Text>
+                <View
+                  style={[
+                    styles.statTile,
+                    { backgroundColor: theme.background, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: theme.text }, boldFont]}>{stdDev}</Text>
+                  <Text style={[styles.statLabel, { color: theme.mutedText }, regularFont]}>Standard Deviation</Text>
                 </View>
-                <View style={styles.statTile}>
-                  <Text style={styles.statValue}>{spread === null ? '—' : `${spread}%`}</Text>
-                  <Text style={styles.statLabel}>Spread (1st to 2nd)</Text>
+                <View
+                  style={[
+                    styles.statTile,
+                    { backgroundColor: theme.background, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: theme.text }, boldFont]}>
+                    {spread === null ? '—' : `${spread}%`}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: theme.mutedText }, regularFont]}>Spread (1st to 2nd)</Text>
                 </View>
-                <View style={styles.statTile}>
-                  <Text style={styles.statValue}>{bestRoundScore ? bestRoundScore.value : '—'}</Text>
-                  <Text style={styles.statLabel}>
+                <View
+                  style={[
+                    styles.statTile,
+                    { backgroundColor: theme.background, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: theme.text }, boldFont]}>
+                    {bestRoundScore ? bestRoundScore.value : '—'}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: theme.mutedText }, regularFont]}>
                     Best Round{bestRoundScore ? ` (${bestRoundScore.playerName})` : ''}
                   </Text>
                 </View>
@@ -273,6 +309,16 @@ export default function FinishSummaryModal({
               dateLabel={dateLabel}
             />
           </View>
+
+          <View style={[StyleSheet.absoluteFill, styles.confettiLayer]} pointerEvents="none">
+            <PIConfetti autoplay sprayDuration={CONFETTI_DURATION} containerStyle={{ flex: 1 }}>
+              {randomOrigins.map((origin, i) => (
+                <PIConfetti.Origin key={i} blastPosition={origin} count={120} initialSpeed={2.4} spread={Math.PI * 2}>
+                  <PIConfetti.Flake size={10} radius={3} />
+                </PIConfetti.Origin>
+              ))}
+            </PIConfetti>
+          </View>
         </View>
       </GestureHandlerRootView>
     </Modal>
@@ -281,14 +327,13 @@ export default function FinishSummaryModal({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  card: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
+  card: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
   dragHandleArea: { alignItems: 'center', paddingVertical: 12 },
-  dragHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#ddd' },
+  dragHandle: { width: 44, height: 5, borderRadius: 3 },
   content: { paddingHorizontal: 20, paddingBottom: 10 },
   shareButton: { alignSelf: 'flex-end', marginBottom: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
   shareButtonText: {},
   plaqueOuter: {
-    backgroundColor: '#D4AF37',
     borderRadius: 18,
     padding: 6,
     marginBottom: 24,
@@ -299,26 +344,25 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   plaqueInner: {
-    backgroundColor: '#FFF8E1',
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: '#B8860B',
     paddingVertical: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   trophy: { fontSize: 40, marginBottom: 6 },
-  winnerLabel: { fontSize: 13, fontWeight: '800', letterSpacing: 2, color: '#8B6914' },
-  winnerName: { fontSize: 26, fontWeight: '800', color: '#3a2a00', marginTop: 4, textAlign: 'center' },
-  plaqueDivider: { width: '60%', height: 1, backgroundColor: '#B8860B', marginVertical: 10 },
-  winnerStat: { fontSize: 15, color: '#5c4600', fontWeight: '600' },
+  winnerLabel: { fontSize: 13, fontWeight: '800', letterSpacing: 2 },
+  winnerName: { fontSize: 26, fontWeight: '800', marginTop: 4, textAlign: 'center' },
+  plaqueDivider: { width: '60%', height: 1, marginVertical: 10 },
+  winnerStat: { fontSize: 15, fontWeight: '600' },
   winnerStatEmphasis: { fontSize: 22, fontWeight: '800' },
-  restRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#eee' },
+  restRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1 },
   restName: { fontSize: 16 },
-  restTotal: { fontSize: 16, color: '#555' },
+  restTotal: { fontSize: 16 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: 30 },
-  statTile: { width: '48%', backgroundColor: '#f0f0f0', borderRadius: 10, padding: 16, marginBottom: 12, alignItems: 'center' },
+  statTile: { width: '48%', borderRadius: 10, padding: 16, marginBottom: 12, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '700' },
-  statLabel: { fontSize: 12, color: '#666', marginTop: 4, textAlign: 'center' },
+  statLabel: { fontSize: 12, marginTop: 4, textAlign: 'center' },
   hiddenCardWrap: { position: 'absolute', top: -10000, left: 0, opacity: 1 },
+  confettiLayer: { zIndex: 10, elevation: 10 },
 });
