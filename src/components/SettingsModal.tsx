@@ -1,18 +1,25 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ReactNode, useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 
+import { usePurchases } from '../contexts/PurchasesContext';
 import { DONE_SOUND_LABELS, DONE_SOUND_OPTIONS, TICKER_SOUND_LABELS, TICKER_SOUND_OPTIONS } from '../lib/sounds';
 import { THEMES, THEME_NAMES } from '../lib/themes';
-import { Player, ScorecardSettings } from '../types';
+import { Player, ScorecardSettings, Theme } from '../types';
 
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
 import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
+
+const FREE_THEME: Theme = 'whiteboard';
 
 type Props = {
   visible: boolean;
@@ -48,6 +55,8 @@ export default function SettingsModal({
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
   const [roundSecondsText, setRoundSecondsText] = useState(String(settings.timerRoundSeconds));
+  const { isUnlocked } = usePurchases();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     setRoundSecondsText(String(settings.timerRoundSeconds));
@@ -75,6 +84,15 @@ export default function SettingsModal({
     onSaveAsPreset(trimmed, settings);
     setPresetName('');
     setShowPresetInput(false);
+  };
+
+  const handleSelectTheme = (name: Theme) => {
+    if (!isUnlocked && name !== FREE_THEME) {
+      onClose();
+      navigation.navigate('Paywall');
+      return;
+    }
+    onUpdateSettings({ theme: name });
   };
 
   return (
@@ -188,16 +206,24 @@ export default function SettingsModal({
               {THEME_NAMES.map((name) => {
                 const palette = THEMES[name];
                 const selected = settings.theme === name;
+                const locked = !isUnlocked && name !== FREE_THEME;
                 return (
                   <Pressable
                     key={name}
-                    onPress={() => onUpdateSettings({ theme: name })}
+                    onPress={() => handleSelectTheme(name)}
                     style={[
                       styles.themeSwatch,
-                      { backgroundColor: palette.background, borderColor: selected ? palette.accent : '#ddd' },
+                      { backgroundColor: palette.background, borderColor: !locked && selected ? palette.accent : '#ddd' },
                     ]}
                   >
-                    <Text style={[styles.themeLabel, { color: palette.text }]}>{palette.label}</Text>
+                    <View style={locked ? styles.themeSwatchDimmed : undefined}>
+                      <Text style={[styles.themeLabel, { color: palette.text }]}>{palette.label}</Text>
+                    </View>
+                    {locked && (
+                      <View style={styles.themeLockOverlay}>
+                        <MaterialCommunityIcons name="lock" size={24} style={styles.themeLockIcon} />
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -345,7 +371,19 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
   rowLabel: { fontSize: 16 },
   themeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  themeSwatch: { width: '47%', paddingVertical: 16, borderRadius: 10, borderWidth: 2, alignItems: 'center' },
+  themeSwatch: { width: '47%', paddingVertical: 16, borderRadius: 10, borderWidth: 2, alignItems: 'center', position: 'relative', overflow: 'hidden' },
+  themeSwatchDimmed: { opacity: 0.35 },
+  themeLockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  themeLockIcon: { color: '#e7e7e7' },
   themeLabel: { fontWeight: '600', fontSize: 13 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
