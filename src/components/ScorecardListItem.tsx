@@ -1,5 +1,7 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Text from './AppText';
+import ConfirmModal, { APP_PALETTE } from './ConfirmModal';
 import SwipeableCard, { SwipeAction } from './SwipeableCard';
 
 import { Scorecard } from '../types';
@@ -11,11 +13,15 @@ type Props = {
 };
 
 export default function ScorecardListItem({ card, onPress, onDelete }: Props) {
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+
   const confirmDelete = () => {
-    Alert.alert('Delete Scorecard?', `"${card.name}" will be permanently deleted.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: onDelete },
-    ]);
+    setDeleteConfirmVisible(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setDeleteConfirmVisible(false);
+    onDelete();
   };
 
   const actions: SwipeAction[] = [
@@ -23,14 +29,28 @@ export default function ScorecardListItem({ card, onPress, onDelete }: Props) {
   ];
 
   return (
-    <SwipeableCard actions={actions} onPress={onPress} cardStyle={styles.card}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.cardName}>{card.name}</Text>
-        <Text style={styles.cardMeta}>
-          {card.status === 'finished' ? 'Finished' : 'In progress'} · {card.players.length} players
-        </Text>
-      </View>
-    </SwipeableCard>
+    <>
+      <SwipeableCard actions={actions} onPress={onPress} cardStyle={styles.card}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardName}>{card.name}</Text>
+          <Text style={styles.cardMeta}>
+            {card.status === 'finished' ? 'Finished' : 'In progress'} · {card.players.length} players
+          </Text>
+        </View>
+      </SwipeableCard>
+
+      <ConfirmModal
+        visible={deleteConfirmVisible}
+        theme={APP_PALETTE}
+        title="Delete Scorecard?"
+        message={`"${card.name}" will be permanently deleted.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirmVisible(false)}
+      />
+    </>
   );
 }
 

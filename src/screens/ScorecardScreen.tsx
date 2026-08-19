@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
 import Coachmark from '../components/Coachmark';
+import ConfirmModal from '../components/ConfirmModal';
 import FinishSummaryModal from '../components/FinishSummaryModal';
 import RoundTimer from '../components/RoundTimer';
 import ScorecardGrid from '../components/ScorecardGrid';
@@ -28,6 +29,7 @@ export default function ScorecardScreen({ route, navigation }: Props) {
   const [card, setCard] = useState<Scorecard | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [confirmFinishVisible, setConfirmFinishVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const tour = useTour();
@@ -233,21 +235,28 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
   });
 
   const finishScorecard = () => {
-    Alert.alert('End Game?', 'This marks the scorecard finished and moves it to history.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Finish',
-        style: 'destructive',
-        onPress: () => {
-          persist((prev) => ({ ...prev, status: 'finished' }));
-          if (card.presetId) {
-            recordPresetGameResult(card.presetId, card);
-          }
-          setShowSummary(true);
-        },
-      },
-    ]);
+    setConfirmFinishVisible(true);
   };
+
+  const handleConfirmFinish = () => {
+    setConfirmFinishVisible(false);
+    persist((prev) => ({ ...prev, status: 'finished' }));
+    if (card.presetId) {
+      recordPresetGameResult(card.presetId, card);
+    }
+    setShowSummary(true);
+  };
+
+    const confirmModalPalette = {
+      surface: theme.surface,
+      border: theme.border,
+      text: theme.text,
+      mutedText: theme.mutedText,
+      fontFamily: theme.fontFamily,
+      fontFamilyBold: theme.fontFamilyBold,
+      confirmButtonColor: theme.finishButton.backgroundColor,
+      confirmButtonTextColor: theme.finishButton.textColor,
+    };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -376,6 +385,18 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         settings={card.settings}
         onUpdateSettings={handleUpdateSettings}
         onSaveAsPreset={handleSaveAsPreset}
+      />
+
+      <ConfirmModal
+        visible={confirmFinishVisible}
+        theme={confirmModalPalette}
+        title="End Game?"
+        message="This marks the scorecard finished and moves it to history."
+        confirmLabel="Finish"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmFinish}
+        onCancel={() => setConfirmFinishVisible(false)}
       />
 
       {showSummary && (

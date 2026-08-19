@@ -3,7 +3,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -17,6 +17,7 @@ import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
 import BottomSheetModal from '../components/BottomSheetModal';
 import Coachmark from '../components/Coachmark';
+import ConfirmModal, { APP_PALETTE } from '../components/ConfirmModal';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
 import ScorecardListItem from '../components/ScorecardListItem';
@@ -51,6 +52,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [manageDataVisible, setManageDataVisible] = useState(false);
+  const [clearHistoryConfirmVisible, setClearHistoryConfirmVisible] = useState(false);
+  const [clearAllConfirmVisible, setClearAllConfirmVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const tour = useTour();
   const { isUnlocked } = usePurchases();
@@ -166,39 +169,23 @@ const handleSavePreset = async ({
   };
 
   const confirmClearHistory = () => {
-    Alert.alert(
-      'Clear History?',
-      'This permanently deletes every finished scorecard. Active scorecards and preset stats are unaffected. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear History',
-          style: 'destructive',
-          onPress: async () => {
-            await clearHistory();
-            reload();
-          },
-        },
-      ]
-    );
+    setClearHistoryConfirmVisible(true);
+  };
+
+  const handleConfirmClearHistory = async () => {
+    setClearHistoryConfirmVisible(false);
+    await clearHistory();
+    reload();
   };
 
   const confirmClearAllData = () => {
-    Alert.alert(
-      'Clear All Data?',
-      'This permanently deletes every scorecard, preset, and stat. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear Everything',
-          style: 'destructive',
-          onPress: async () => {
-            await clearAllData();
-            reload();
-          },
-        },
-      ]
-    );
+    setClearAllConfirmVisible(true);
+  };
+
+  const handleConfirmClearAll = async () => {
+    setClearAllConfirmVisible(false);
+    await clearAllData();
+    reload();
   };
 
   const openPrivacyPolicy = () => {
@@ -355,6 +342,30 @@ return (
           }}
         />
       </BottomSheetModal>
+
+      <ConfirmModal
+        visible={clearHistoryConfirmVisible}
+        theme={APP_PALETTE}
+        title="Clear History?"
+        message="This permanently deletes every finished scorecard. Active scorecards and preset stats are unaffected. This cannot be undone."
+        confirmLabel="Clear History"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmClearHistory}
+        onCancel={() => setClearHistoryConfirmVisible(false)}
+      />
+
+      <ConfirmModal
+        visible={clearAllConfirmVisible}
+        theme={APP_PALETTE}
+        title="Clear All Data?"
+        message="This permanently deletes every scorecard, preset, and stat. This cannot be undone."
+        confirmLabel="Clear Everything"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmClearAll}
+        onCancel={() => setClearAllConfirmVisible(false)}
+      />
 
       <Coachmark
         visible={tour.active && tour.step === 'newScorecard'}
