@@ -56,7 +56,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     surface: '#f5f5f5',
     border: '#e0e0e0',
     text: '#000000',
-    mutedText: '#666666',
+    mutedText: '#393939',
     accent: '#155843',
     accentText: '#ffffff',
     roundWinnerHighlight: '#e8e8e8',

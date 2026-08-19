@@ -43,7 +43,7 @@ export default function HistoryScreen({ navigation }: Props) {
         <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
            <MaterialCommunityIcons name="arrow-left" size={24} style={styles.arrow} />
         </Pressable>
-        <Text style={styles.title}>History</Text>
+        <Text style={styles.title}>Completed Scorecards</Text>
       </View>
 
       <FlatList

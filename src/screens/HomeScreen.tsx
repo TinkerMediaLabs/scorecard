@@ -306,7 +306,7 @@ return (
           />
         )} */}
         <SheetOption
-          label="History"
+          label="Completed Scorecards"
           onPress={() => {
             setMenuVisible(false);
             navigation.navigate('History');

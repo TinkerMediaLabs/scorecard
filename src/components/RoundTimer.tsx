@@ -118,7 +118,7 @@ export default function RoundTimer({ theme, roundSeconds, warningEnabled, doneSo
 
   return (
     <View style={[styles.container, { backgroundColor: barBackgroundColor, borderColor: theme.border }]}>
-      <Text style={[styles.time, { color: timeColor }]}>{display}</Text>
+      <Text style={[styles.time, { color: timeColor, fontFamily: theme.fontFamily }]}>{display}</Text>
       <View style={styles.buttons}>
         <Pressable onPress={toggle} style={[styles.button, { backgroundColor: toggleBackgroundColor }]}>
           <Text
@@ -126,6 +126,7 @@ export default function RoundTimer({ theme, roundSeconds, warningEnabled, doneSo
               color: toggleTextColor,
               fontSize: theme.timerStartButton.fontSize,
               fontWeight: theme.timerStartButton.fontWeight,
+              fontFamily: theme.fontFamily
             }}
           >
             {isRunning ? 'Pause' : 'Start'}
@@ -144,6 +145,7 @@ export default function RoundTimer({ theme, roundSeconds, warningEnabled, doneSo
               color: resetTextColor,
               fontSize: theme.timerResetButton.fontSize,
               fontWeight: theme.timerResetButton.fontWeight,
+              fontFamily: theme.fontFamily
             }}
           >
             Reset
