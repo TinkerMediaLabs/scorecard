@@ -62,6 +62,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     roundWinnerHighlight: '#e8e8e8',
     arrow: {color: '#000'},
     fontFamilyBold: 'FuzzyBubblesBold',
+    fontFamily: 'FuzzyBubblesRegular',
 
     editButton: { backgroundColor: 'transparent', textColor: '#155843', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#155843', textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
@@ -114,6 +115,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     accentText: '#ffffff',
     roundWinnerHighlight: '#ffe98a',
     fontFamilyBold: 'FuzzyBubblesBold',
+    fontFamily: 'FuzzyBubblesRegular',
 
     editButton: { backgroundColor: 'transparent', textColor: '#6a0dadB3', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#6a0dadB3', textColor: '#ffffff', fontSize: 14, fontWeight: '600' },
@@ -141,6 +143,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     roundWinnerHighlight: '#28493a',
     arrow: {color: '#ff8fd0CC'},
     fontFamilyBold: 'FuzzyBubblesBold',
+    fontFamily: 'FuzzyBubblesRegular',
 
     editButton: { backgroundColor: 'transparent', textColor: '#ff8fd0CC', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#ff8fd0CC', textColor: '#1c3d2e', fontSize: 14, fontWeight: '600' },
@@ -169,6 +172,7 @@ export const THEMES: Record<Theme, ThemePalette> = {
     roundColumnSurface: 'transparent',
     arrow: {color: '#fff'},
     fontFamilyBold: 'FuzzyBubblesBold',
+    fontFamily: 'FuzzyBubblesRegular',
 
     editButton: { backgroundColor: 'transparent', textColor: '#cccccc', fontSize: 14, fontWeight: 'normal' },
     finishButton: { backgroundColor: '#4e4e4e', textColor: 'white', fontSize: 14, fontWeight: '600' },

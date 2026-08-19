@@ -1,12 +1,18 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import {
-    checkEntitlement,
-    initPurchases,
-    purchaseLifetimeUnlock,
-    PurchaseResult,
-    restorePurchases,
-    subscribeToEntitlementChanges,
+  checkEntitlement,
+  initPurchases,
+  purchaseLifetimeUnlock,
+  PurchaseResult,
+  restorePurchases,
+  subscribeToEntitlementChanges,
 } from '../lib/purchases';
+
+// Set to true to skip the paywall entirely while developing. Only takes effect in a dev client
+// (__DEV__ is always false in production/TestFlight/internal-testing builds), so this can be left
+// committed without risk. Flip to false when you actually need to test the real purchase/restore
+// flow against RevenueCat sandbox.
+const DEV_BYPASS_PAYWALL = true;
 
 type PurchasesContextValue = {
   isUnlocked: boolean;
@@ -18,10 +24,13 @@ type PurchasesContextValue = {
 const PurchasesContext = createContext<PurchasesContextValue | undefined>(undefined);
 
 export function PurchasesProvider({ children }: { children: ReactNode }) {
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const bypass = __DEV__ && DEV_BYPASS_PAYWALL;
+  const [isUnlocked, setIsUnlocked] = useState(bypass);
+  const [loading, setLoading] = useState(!bypass);
 
   useEffect(() => {
+    if (bypass) return;
+
     initPurchases();
     checkEntitlement().then((unlocked) => {
       setIsUnlocked(unlocked);
