@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, Scorecard, ScorecardSettings, WinCondition } from '../types';
+import { DEFAULT_PRESET_STATS, DEFAULT_SETTINGS, Preset, PresetStats, Scorecard, ScorecardSettings, WinCondition } from '../types';
 
 const INDEX_KEY = 'scorecards_index';
 const SCORECARD_PREFIX = 'scorecard_';
@@ -111,6 +111,7 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
   const preset = presets[index];
   const winCondition = preset.settings.winCondition;
   const lowestScoreWins = winCondition === 'leastPoints';
+  const isRoundsMode = winCondition === 'mostRoundsWon';
 
   const totals = card.players.map((p) =>
     card.rounds.reduce((sum, r) => sum + (r.scores[p.id] ?? 0), 0)
@@ -154,6 +155,33 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
     }
   }
 
+  // Per-player win/loss/tie for this game, keyed by name. Uses the same metric that decides the
+  // overall game winner: round-win count for "Most Rounds Won", otherwise total points. A player
+  // only counts as a "win" if they uniquely hold the best value — if multiple players share the
+  // best value, all of them get a "tie" instead of a double-counted win.
+  const outcomeMetric = isRoundsMode ? roundWinsCount : totals;
+  const actualBest = outcomeMetric.length
+    ? isRoundsMode
+      ? Math.max(...outcomeMetric)
+      : lowestScoreWins
+        ? Math.min(...outcomeMetric)
+        : Math.max(...outcomeMetric)
+    : 0;
+  const leaderCount = outcomeMetric.filter((v) => v === actualBest).length;
+
+  const playerRecords: PresetStats['playerRecords'] = { ...preset.stats.playerRecords };
+  card.players.forEach((p, i) => {
+    const current = playerRecords[p.name] ?? { wins: 0, losses: 0, ties: 0 };
+    const isLeader = outcomeMetric[i] === actualBest;
+    if (isLeader && leaderCount > 1) {
+      playerRecords[p.name] = { ...current, ties: current.ties + 1 };
+    } else if (isLeader) {
+      playerRecords[p.name] = { ...current, wins: current.wins + 1 };
+    } else {
+      playerRecords[p.name] = { ...current, losses: current.losses + 1 };
+    }
+  });
+
   let winningIndex = -1;
   if (winCondition === 'mostRoundsWon') {
     const maxWins = roundWinsCount.length ? Math.max(...roundWinsCount) : 0;
@@ -173,6 +201,7 @@ export async function recordPresetGameResult(presetId: string, card: Scorecard):
       highestTotal,
       lowestTotal,
       bestRound,
+      playerRecords,
     },
   };
 

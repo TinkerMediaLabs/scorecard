@@ -56,6 +56,12 @@ export interface PresetGameRecord {
   date: string;
 }
 
+export interface PlayerRecord {
+  wins: number;
+  losses: number;
+  ties: number;
+}
+
 export interface PresetStats {
   gamesPlayed: number;
   totalWinningScore: number;
@@ -63,6 +69,9 @@ export interface PresetStats {
   highestTotal: PresetGameRecord | null;
   lowestTotal: PresetGameRecord | null;
   bestRound: PresetGameRecord | null;
+  // Keyed by player name (not id) since a fresh scorecard created from a preset gets new
+  // player ids each time — name is the only stable identity across games from the same preset.
+  playerRecords: Record<string, PlayerRecord>;
 }
 
 export const DEFAULT_PRESET_STATS: PresetStats = {
@@ -72,6 +81,7 @@ export const DEFAULT_PRESET_STATS: PresetStats = {
   highestTotal: null,
   lowestTotal: null,
   bestRound: null,
+  playerRecords: {},
 };
 
 export interface Preset {

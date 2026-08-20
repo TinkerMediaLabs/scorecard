@@ -155,8 +155,37 @@ export default function PresetStatsScreen({ route, navigation }: Props) {
                 record={stats.bestRound}
               />
             )}
+
+            {preset.players.length > 0 && (
+              <View style={[styles.playerRecordCard, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.playerRecordHeading, fontStyle, { color: theme.text }]}>Player Record</Text>
+                {preset.players.map((p, i) => {
+                  const record = stats.playerRecords[p.name] ?? { wins: 0, losses: 0, ties: 0 };
+                  const isLast = i === preset.players.length - 1;
+                  return (
+                    <View
+                      key={p.id}
+                      style={[
+                        styles.playerRecordRow,
+                        { borderColor: theme.border },
+                        isLast && styles.playerRecordRowLast,
+                      ]}
+                    >
+                      <Text style={[styles.playerRecordName, fontStyle, { color: theme.text }]} numberOfLines={1}>
+                        {p.name}
+                      </Text>
+                      <Text style={[styles.playerRecordStats, fontStyle, { color: theme.mutedText }]}>
+                        {record.wins} {record.wins === 1 ? 'win' : 'wins'} · {record.losses}{' '}
+                        {record.losses === 1 ? 'loss' : 'losses'} · {record.ties} {record.ties === 1 ? 'tie' : 'ties'}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </>
         )}
+        <View style ={{height: 100}}/>
       </ScrollView>
     </BackgroundComponent>
   );
@@ -177,9 +206,9 @@ function StatTile({
 }) {
   return (
     <View style={[styles.statTile, { backgroundColor: theme.surface }]}>
-      <View style={[styles.statIconCircle, { backgroundColor: lightenHex(theme.accent, 0.82) }]}>
+      {/* <View style={[styles.statIconCircle, { backgroundColor: lightenHex(theme.accent, 0.82) }]}>
         <MaterialCommunityIcons name={icon} size={22} color={theme.accent} />
-      </View>
+      </View> */}
       <Text style={[styles.statValue, fontStyle, { color: theme.accent }]}>{value}</Text>
       <Text style={[styles.statLabel, fontStyle, { color: theme.mutedText }]}>{label}</Text>
     </View>
@@ -204,19 +233,19 @@ function RecordCard({
   return (
     <View style={styles.recordCardShadowWrapper}>
       <View style={[styles.recordCard, { backgroundColor: theme.surface }]}>
-        {/* {theme.name === 'whiteboard' ? (
+        {theme.name === 'whiteboard' ? (
           <ImageBackground source={ribbonImage} resizeMode="cover" style={styles.ribbon} imageStyle={styles.ribbonImage}>
-            <View style={styles.ribbonBadge}>
+            {/* <View style={styles.ribbonBadge}>
               <MaterialCommunityIcons name={icon} size={20} color={RIBBON_ICON_COLOR} />
-            </View>
+            </View> */}
           </ImageBackground>
-        ) : ( */}
-          {/* <View style={[styles.ribbon, styles.ribbonPlain, { backgroundColor: lightenHex(theme.accent, 0.75) }]}>
-            <View style={styles.ribbonBadge}>
-              <MaterialCommunityIcons name={icon} size={20} color={theme.accent} />
-            </View>
-          </View> */}
-        {/* )} */}
+        ) : (null
+          // <View style={[styles.ribbon, styles.ribbonPlain, { backgroundColor: lightenHex(theme.accent, 0.75) }]}>
+          //   {/* <View style={styles.ribbonBadge}>
+          //     <MaterialCommunityIcons name={icon} size={20} color={theme.accent} />
+          //   </View> */}
+          // </View>
+        )}
         <View style={styles.recordBody}>
           <Text style={[styles.recordTitle, fontStyle, { color: theme.accent }]}>{title}</Text>
           <Text style={[styles.recordValue, fontStyle, { color: theme.text }]}>{record.value}</Text>
@@ -230,6 +259,7 @@ function RecordCard({
           </Text>
         </View>
       </View>
+      
     </View>
   );
 }
@@ -297,8 +327,22 @@ const styles = StyleSheet.create({
   recordBody: { flex: 1, padding: 16 },
   recordTitle: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 4 },
   recordValue: { fontSize: 32, fontWeight: '800' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 8, width: '80%' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 8, width: '100%', },
   dividerLine: { flex: 1, height: 1 },
   dividerDot: { width: 6, height: 6, borderRadius: 3, marginHorizontal: 6, transform: [{ rotate: '45deg' }] },
   recordMeta: { fontSize: 12 },
+
+  playerRecordCard: { borderRadius: 16, padding: 16, marginBottom: 18, ...cardShadow },
+  playerRecordHeading: { fontSize: 15, fontWeight: '800', marginBottom: 8 },
+  playerRecordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  playerRecordRowLast: { borderBottomWidth: 0 },
+  playerRecordName: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
+  playerRecordStats: { fontSize: 13 },
 });

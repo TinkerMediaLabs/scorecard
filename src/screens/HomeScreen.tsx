@@ -221,6 +221,7 @@ return (
         contentContainerStyle={styles.list}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
             <View style={styles.presetsSection}>
