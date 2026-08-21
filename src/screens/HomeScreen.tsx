@@ -396,7 +396,7 @@ return (
         theme={APP_PALETTE}
         title="Clear All Data?"
         message="This permanently deletes every scorecard, preset, and stat. This cannot be undone."
-        confirmLabel="Clear Everything"
+        confirmLabel="Erase Data"
         cancelLabel="Cancel"
         destructive
         onConfirm={handleConfirmClearAll}
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },
   title: { fontSize: 28, fontWeight: '700' },
   menuIcon: { fontSize: 16, fontWeight: '700', color: '#666666', paddingHorizontal: 8, letterSpacing: 1 },
-  newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 18, alignItems: 'center', marginVertical: 16 },
+  newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 18, alignItems: 'center', marginBottom: 16},
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   list: { paddingBottom: 20 },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },

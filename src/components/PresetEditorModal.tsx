@@ -2,8 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
-import { ReactNode, useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { Alert, Modal, Pressable, TextInput as RNTextInput, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { RootStackParamList } from '../App';
 import Text from '../components/AppText';
@@ -41,6 +41,7 @@ export default function PresetEditorModal({
   const [roundSecondsText, setRoundSecondsText] = useState(String(DEFAULT_SETTINGS.timerRoundSeconds));
   const { isUnlocked } = usePurchases();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const nameInputRef = useRef<RNTextInput>(null);
 
   useEffect(() => {
     if (visible) {
@@ -58,6 +59,18 @@ export default function PresetEditorModal({
       );
     }
   }, [visible, initialName, initialSettings, initialPlayers]);
+
+  // Preset name is required to save, so put the cursor there as soon as the modal opens —
+  // but only for a brand-new preset. When editing an existing one, the name is already filled
+  // in, so auto-focusing would just pop the keyboard open over a field the user likely isn't
+  // touching. The short delay lets the slide-up modal animation settle before the keyboard
+  // raises — focusing immediately on mount can get swallowed by the transition on some devices.
+  useEffect(() => {
+    if (visible && !initialName) {
+      const timer = setTimeout(() => nameInputRef.current?.focus(), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, initialName]);
 
   const updateSettings = (patch: Partial<ScorecardSettings>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
@@ -129,6 +142,7 @@ export default function PresetEditorModal({
         <ScrollView contentContainerStyle={styles.content}>
           <Section title="Preset Name">
             <TextInput
+              ref={nameInputRef}
               value={name}
               onChangeText={setName}
               placeholder="e.g. Tournament Rules"
@@ -283,6 +297,7 @@ export default function PresetEditorModal({
               </>
             )}
           </Section>
+          <View style={{height: 100}}/> 
         </ScrollView>
       </View>
     </Modal>
@@ -346,7 +361,7 @@ const styles = StyleSheet.create({
   saveText: { fontSize: 16, color: '#155843', fontWeight: '600' },
   content: { paddingHorizontal: 20, paddingBottom: 60 },
   section: { marginTop: 24 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#000', textTransform: 'uppercase', marginBottom: 10, fontFamily: 'FuzzyBubblesBold' },
   subLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginTop: 10, marginBottom: 8 },
   textInput: { borderBottomWidth: 1, borderColor: '#ddd', paddingVertical: 8, fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },

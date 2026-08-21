@@ -1,3 +1,4 @@
+import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageBackground, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -6,6 +7,7 @@ import TextInput from '../components/AppTextInput';
 import { TEXT_SCALE } from '../lib/fonts';
 import { ThemePalette } from '../lib/themes';
 import { Player, Round, TextSize, WinCondition } from '../types';
+import StandingsModal from './StandingsModal';
 
 const ROUND_COL_WIDTH = 56;
 const ROW_HEIGHT = 56;
@@ -13,6 +15,19 @@ const EXPANDED_ROW_HEIGHT = 78;
 
 const MIN_CELL_WIDTH_STANDARD = 84;
 const MIN_CELL_WIDTH_EXTRA_LARGE = 111;
+
+// The grid cell only has room for a handful of extra fields at a glance. Bid/Meld/Bonus/custom
+// fields can total up to 6 — cap what's shown on the card itself and let the tap-to-edit modal
+// (which already shows every enabled field) be the place to see/edit the rest.
+const MAX_VISIBLE_EXTRA_FIELDS = 3;
+
+// Each visible extra field renders as its own stacked label+value block inside the cell. These
+// feed into a dynamic minimum cell width so cells widen to fit however many extra fields are
+// actually showing, instead of using one fixed width that squishes once there are 3 fields and
+// more players than fit on screen at once.
+const EXTRA_FIELD_MIN_WIDTH = 44;
+const EXTRA_FIELD_GAP = 14; // matches extrasRow's gap
+const CELL_HORIZONTAL_PADDING = 16;
 
 type Props = {
   players: Player[];
@@ -41,6 +56,12 @@ type Props = {
   highlightRoundWinner: boolean;
   textSize: TextSize;
 };
+
+type ExtraFieldDef =
+  | { kind: 'bid' }
+  | { kind: 'meld' }
+  | { kind: 'bonus' }
+  | { kind: 'custom'; index: number; label: string };
 
 function winsLabel(count: number): string {
   return `${count} ${count === 1 ? 'Win' : 'Wins'}`;
@@ -72,6 +93,7 @@ function createStyles(theme: ThemePalette, textScale: number) {
     headerRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: theme.border },
     footerRow: { flexDirection: 'row', borderTopWidth: 1, borderColor: theme.border },
     corner: { height: scaledRowHeight, backgroundColor: theme.roundColumnSurface ?? theme.surface },
+    standingsButton: { alignItems: 'center', justifyContent: 'center' },
     headerCell: { height: scaledRowHeight, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderColor: theme.border },
     headerText: { fontWeight: '700', fontSize: scaled(14), color: theme.text, ...(theme.fontFamilyBold ? { fontFamily: theme.fontFamilyBold } : {}) },
     roundCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: theme.roundColumnSurface ?? theme.surface, borderBottomWidth: 1, borderColor: theme.border },
@@ -194,14 +216,43 @@ export default function ScorecardGrid({
   const backgroundProps = theme.backgroundImage
     ? { source: theme.backgroundImage, resizeMode: 'cover' as const }
     : {};
-  const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
-  const minCellWidth = textSize === 'extraLarge' ? MIN_CELL_WIDTH_EXTRA_LARGE : MIN_CELL_WIDTH_STANDARD;
-  const maxVisibleColumns = Math.max(1, Math.floor(scrollAreaWidth / minCellWidth));
-  const cellWidth = Math.floor(scrollAreaWidth / Math.min(Math.max(players.length, 1), maxVisibleColumns));
   const hasExtras = bidEnabled || meldEnabled || bonusEnabled || customFields.length > 0;
   const rowHeight = Math.round((hasExtras ? EXPANDED_ROW_HEIGHT : ROW_HEIGHT) * textScale);
   const isRoundsMode = winCondition === 'mostRoundsWon';
   const leaderRoundWins = roundWinsCount.length ? Math.max(...roundWinsCount) : 0;
+
+  // Bid/Meld/Bonus/custom fields can total up to 6 enabled at once. Only the first
+  // MAX_VISIBLE_EXTRA_FIELDS (in Bid, Meld, Bonus, then custom-field order) are drawn directly
+  // on the grid cell; the tap-to-edit modal below always shows every enabled field regardless.
+  const allExtraFieldDefs = useMemo<ExtraFieldDef[]>(() => {
+    const defs: ExtraFieldDef[] = [];
+    if (bidEnabled) defs.push({ kind: 'bid' });
+    if (meldEnabled) defs.push({ kind: 'meld' });
+    if (bonusEnabled) defs.push({ kind: 'bonus' });
+    customFields.forEach((label, index) => defs.push({ kind: 'custom', index, label }));
+    return defs;
+  }, [bidEnabled, meldEnabled, bonusEnabled, customFields]);
+  const visibleExtraFieldDefs = allExtraFieldDefs.slice(0, MAX_VISIBLE_EXTRA_FIELDS);
+
+  const scrollAreaWidth = screenWidth - ROUND_COL_WIDTH;
+  const baseMinCellWidth = textSize === 'extraLarge' ? MIN_CELL_WIDTH_EXTRA_LARGE : MIN_CELL_WIDTH_STANDARD;
+  // Widen the minimum cell width to fit however many extra fields are actually visible, side by
+  // side, instead of using one fixed width regardless of extras. With none enabled this collapses
+  // right back down to the plain baseline width — same adaptive logic either way. Cap the width
+  // calculation at 2 fields' worth — at 3 fields the row is still snug but not appreciably
+  // squished, so there's no reason to keep widening the cell past what 2 fields need.
+  const extrasWidthFieldCount = Math.min(visibleExtraFieldDefs.length, 2);
+  const extrasMinWidth =
+    extrasWidthFieldCount > 0
+      ? Math.round(
+          extrasWidthFieldCount * EXTRA_FIELD_MIN_WIDTH * textScale +
+            (extrasWidthFieldCount - 1) * EXTRA_FIELD_GAP +
+            CELL_HORIZONTAL_PADDING
+        )
+      : 0;
+  const minCellWidth = Math.max(baseMinCellWidth, extrasMinWidth);
+  const maxVisibleColumns = Math.max(1, Math.floor(scrollAreaWidth / minCellWidth));
+  const cellWidth = Math.floor(scrollAreaWidth / Math.min(Math.max(players.length, 1), maxVisibleColumns));
 
   const headerRef = useAnimatedRef<Animated.ScrollView>();
   const footerRef = useAnimatedRef<Animated.ScrollView>();
@@ -232,6 +283,7 @@ export default function ScorecardGrid({
   const [draftMeld, setDraftMeld] = useState('');
   const [draftBonus, setDraftBonus] = useState('');
   const [draftCustom, setDraftCustom] = useState<string[]>([]);
+  const [standingsVisible, setStandingsVisible] = useState(false);
   const scoreInputRef = useRef<any>(null);
 
   const openEditor = (
@@ -370,30 +422,38 @@ export default function ScorecardGrid({
                       <Text style={styles.scoreText}>{value == null ? '' : value}</Text>
                       {hasExtras && (
                         <View style={styles.extrasRow}>
-                          {bidEnabled && (
-                            <View style={styles.extraField}>
-                              <Text style={styles.extrasLabel}>Bid</Text>
-                              <Text style={styles.extrasValue}>{bidValue ?? '–'}</Text>
-                            </View>
-                          )}
-                          {meldEnabled && (
-                            <View style={styles.extraField}>
-                              <Text style={styles.extrasLabel}>Meld</Text>
-                              <Text style={styles.extrasValue}>{meldValue ?? '–'}</Text>
-                            </View>
-                          )}
-                          {bonusEnabled && (
-                            <View style={styles.extraField}>
-                              <Text style={styles.extrasLabel}>Bonus</Text>
-                              <Text style={styles.extrasValue}>{bonusValue ?? '–'}</Text>
-                            </View>
-                          )}
-                          {customFields.map((label, i) => (
-                            <View key={i} style={styles.extraField}>
-                              <Text style={styles.extrasLabel}>{label}</Text>
-                              <Text style={styles.extrasValue}>{customValues[i] ?? '–'}</Text>
-                            </View>
-                          ))}
+                          {visibleExtraFieldDefs.map((def) => {
+                            if (def.kind === 'bid') {
+                              return (
+                                <View key="bid" style={styles.extraField}>
+                                  <Text style={styles.extrasLabel}>Bid</Text>
+                                  <Text style={styles.extrasValue}>{bidValue ?? '–'}</Text>
+                                </View>
+                              );
+                            }
+                            if (def.kind === 'meld') {
+                              return (
+                                <View key="meld" style={styles.extraField}>
+                                  <Text style={styles.extrasLabel}>Meld</Text>
+                                  <Text style={styles.extrasValue}>{meldValue ?? '–'}</Text>
+                                </View>
+                              );
+                            }
+                            if (def.kind === 'bonus') {
+                              return (
+                                <View key="bonus" style={styles.extraField}>
+                                  <Text style={styles.extrasLabel}>Bonus</Text>
+                                  <Text style={styles.extrasValue}>{bonusValue ?? '–'}</Text>
+                                </View>
+                              );
+                            }
+                            return (
+                              <View key={`custom-${def.index}`} style={styles.extraField}>
+                                <Text style={styles.extrasLabel}>{def.label}</Text>
+                                <Text style={styles.extrasValue}>{customValues[def.index] ?? '–'}</Text>
+                              </View>
+                            );
+                          })}
                         </View>
                       )}
                     </Pressable>
@@ -407,7 +467,13 @@ export default function ScorecardGrid({
       </View>
 
       <View style={styles.footerRow}>
-        <View style={[styles.corner, { width: ROUND_COL_WIDTH }]} />
+        <Pressable
+          style={[styles.corner, styles.standingsButton, { width: ROUND_COL_WIDTH }]}
+          onPress={() => setStandingsVisible(true)}
+          hitSlop={8}
+        >
+          <FontAwesome name="list-ol" size={16} color={theme.mutedText} />
+        </Pressable>
         <Animated.ScrollView ref={footerRef} horizontal scrollEnabled={false} showsHorizontalScrollIndicator={false} style={{ width: scrollAreaWidth }}>
           {players.map((p, i) => {
             const isWinner = isRoundsMode
@@ -521,6 +587,16 @@ export default function ScorecardGrid({
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>
+
+      <StandingsModal
+        visible={standingsVisible}
+        onClose={() => setStandingsVisible(false)}
+        players={players}
+        totals={totals}
+        roundWinsCount={roundWinsCount}
+        winCondition={winCondition}
+        theme={theme}
+      />
     </BackgroundComponent>
   );
 }
