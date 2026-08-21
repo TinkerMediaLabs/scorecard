@@ -11,8 +11,8 @@ import TextInput from '../components/AppTextInput';
 import ScorecardListItem from '../components/ScorecardListItem';
 import ScorecardSortMenu from '../components/ScorecardSortMenu';
 import { ScorecardSortMode, sortScorecards } from '../lib/scorecardSort';
-import { deleteScorecard, loadAllScorecards } from '../lib/storage';
-import { Scorecard } from '../types';
+import { deleteScorecard, listPresets, loadAllScorecards } from '../lib/storage';
+import { Preset, Scorecard } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'History'>;
 
@@ -23,6 +23,7 @@ const SORT_LABELS: Record<ScorecardSortMode, string> = {
 
 export default function HistoryScreen({ navigation }: Props) {
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
+  const [presets, setPresets] = useState<Preset[]>([]);
   const [sortMode, setSortMode] = useState<ScorecardSortMode>('mostRecent');
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [query, setQuery] = useState('');
@@ -33,6 +34,7 @@ export default function HistoryScreen({ navigation }: Props) {
     loadAllScorecards().then((cards) => {
       setScorecards(cards.filter((c) => c.status === 'finished'));
     });
+    listPresets().then(setPresets);
   }, []);
 
   useFocusEffect(
@@ -40,6 +42,14 @@ export default function HistoryScreen({ navigation }: Props) {
       reload();
     }, [reload])
   );
+
+  const presetNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    presets.forEach((p) => {
+      map[p.id] = p.name;
+    });
+    return map;
+  }, [presets]);
 
   const sortedScorecards = useMemo(() => sortScorecards(scorecards, sortMode), [scorecards, sortMode]);
   const visibleScorecards = useMemo(() => {
@@ -99,6 +109,7 @@ export default function HistoryScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <ScorecardListItem
             card={item}
+            presetName={item.presetId ? presetNameById[item.presetId] : undefined}
             onPress={() => navigation.navigate('Scorecard', { scorecardId: item.id })}
             onDelete={() => handleDelete(item.id)}
           />
@@ -119,7 +130,7 @@ export default function HistoryScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '700' },
+  title: { fontSize: 20, fontWeight: '700' },
   arrow: {marginRight: 10},
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
   searchBox: {

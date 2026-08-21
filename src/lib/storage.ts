@@ -87,6 +87,11 @@ export async function listPresets(): Promise<Preset[]> {
   return presets.map(hydratePreset);
 }
 
+export async function getPreset(id: string): Promise<Preset | null> {
+  const presets = await listPresets();
+  return presets.find((p) => p.id === id) ?? null;
+}
+
 export async function savePreset(preset: Preset): Promise<void> {
   const presets = await listPresets();
   const index = presets.findIndex((p) => p.id === preset.id);

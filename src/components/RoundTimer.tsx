@@ -17,7 +17,7 @@ type Props = {
 };
 
 const TICK_MS = 250;
-const WARNING_AT_MS = 15000;
+const WARNING_AT_MS = 10000;
 const LOW_TIME_AT_MS = 10000;
 
 export default function RoundTimer({ theme, roundSeconds, warningEnabled, doneSound, tickerSound }: Props) {

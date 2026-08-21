@@ -11,7 +11,7 @@ import TextInput from '../components/AppTextInput';
 import { usePurchases } from '../contexts/PurchasesContext';
 import { DONE_SOUND_LABELS, DONE_SOUND_OPTIONS, TICKER_SOUND_LABELS, TICKER_SOUND_OPTIONS } from '../lib/sounds';
 import { THEMES, THEME_NAMES } from '../lib/themes';
-import { Player, ScorecardSettings, Theme } from '../types';
+import { Player, Preset, ScorecardSettings, Theme } from '../types';
 
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,6 +20,32 @@ import { TEXT_SIZE_LABELS, TEXT_SIZE_OPTIONS } from '../lib/fonts';
 import { WIN_CONDITION_LABELS, WIN_CONDITION_OPTIONS } from '../lib/winConditions';
 
 const FREE_THEME: Theme = 'whiteboard';
+
+// Only these fields are pushed to (or compared against) a linked preset. Things like the card's
+// own name or the live player order are session-specific to this scorecard and never touch the
+// preset record.
+function settingsEqual(a: ScorecardSettings, b: ScorecardSettings): boolean {
+  const aFields = a.customFields ?? [];
+  const bFields = b.customFields ?? [];
+  return (
+    a.winCondition === b.winCondition &&
+    a.showRoundWinner === b.showRoundWinner &&
+    a.highlightRoundWinner === b.highlightRoundWinner &&
+    a.useRomanNumerals === b.useRomanNumerals &&
+    a.theme === b.theme &&
+    a.timerEnabled === b.timerEnabled &&
+    a.timerWarningEnabled === b.timerWarningEnabled &&
+    a.timerRoundSeconds === b.timerRoundSeconds &&
+    a.timerDoneSound === b.timerDoneSound &&
+    a.timerTickerSound === b.timerTickerSound &&
+    a.bidEnabled === b.bidEnabled &&
+    a.meldEnabled === b.meldEnabled &&
+    a.bonusEnabled === b.bonusEnabled &&
+    a.textSize === b.textSize &&
+    aFields.length === bFields.length &&
+    aFields.every((v, i) => v === bFields[i])
+  );
+}
 
 type Props = {
   visible: boolean;
@@ -35,6 +61,8 @@ type Props = {
   onShufflePlayers: () => void;
   onReorderPlayers: (players: Player[]) => void;
   onSaveAsPreset: (name: string, settings: ScorecardSettings) => void;
+  linkedPreset: Preset | null;
+  onApplyChangesToPreset: (settings: ScorecardSettings) => void | Promise<void>;
 };
 
 export default function SettingsModal({
@@ -51,16 +79,41 @@ export default function SettingsModal({
   onShufflePlayers,
   onReorderPlayers,
   onSaveAsPreset,
+  linkedPreset,
+  onApplyChangesToPreset,
 }: Props) {
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
   const [roundSecondsText, setRoundSecondsText] = useState(String(settings.timerRoundSeconds));
+  const [presetBaseline, setPresetBaseline] = useState<ScorecardSettings | null>(linkedPreset?.settings ?? null);
+  const [hasChangedOnce, setHasChangedOnce] = useState(false);
   const { isUnlocked } = usePurchases();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     setRoundSecondsText(String(settings.timerRoundSeconds));
   }, [settings.timerRoundSeconds]);
+
+  // Reset the "have settings diverged from the preset" tracking each time the modal is opened,
+  // so "Apply Changes to Preset" only appears once the user actually changes something in this
+  // session (not just because a stale comparison happened to differ).
+  useEffect(() => {
+    if (visible) {
+      setPresetBaseline(linkedPreset?.settings ?? null);
+      setHasChangedOnce(false);
+    }
+  }, [visible]);
+
+  const isPresetDirty = presetBaseline ? !settingsEqual(settings, presetBaseline) : false;
+
+  useEffect(() => {
+    if (isPresetDirty) setHasChangedOnce(true);
+  }, [isPresetDirty]);
+
+  const handleApplyChangesToPreset = async () => {
+    await onApplyChangesToPreset(settings);
+    setPresetBaseline(settings);
+  };
 
   const updateCustomField = (index: number, label: string) => {
     const next = [...(settings.customFields ?? [])];
@@ -106,6 +159,37 @@ export default function SettingsModal({
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
+          {linkedPreset && (
+            <View style={styles.presetLinkBlock}>
+              <View style={styles.presetIndicatorRow}>
+                <MaterialCommunityIcons
+                  name="keyboard-return"
+                  size={16}
+                  color="#155843"
+                  style={styles.presetIndicatorIcon}
+                />
+                <Text style={styles.presetIndicatorText}>{linkedPreset.name}</Text>
+              </View>
+
+              {hasChangedOnce && (
+                <Pressable
+                  onPress={isPresetDirty ? handleApplyChangesToPreset : undefined}
+                  disabled={!isPresetDirty}
+                  style={[styles.applyPresetButton, !isPresetDirty && styles.applyPresetButtonDisabled]}
+                >
+                  <Text
+                    style={[
+                      styles.applyPresetButtonText,
+                      !isPresetDirty && styles.applyPresetButtonTextDisabled,
+                    ]}
+                  >
+                    {isPresetDirty ? 'Apply Changes to Preset' : 'Preset Updated'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
           <Section title="Card Title">
             <TextInput value={cardName} onChangeText={onRenameCard} style={styles.textInput} />
           </Section>
@@ -163,9 +247,8 @@ export default function SettingsModal({
             <Row label="Bid" value={settings.bidEnabled} onValueChange={(v) => onUpdateSettings({ bidEnabled: v })} />
             <Row label="Meld" value={settings.meldEnabled} onValueChange={(v) => onUpdateSettings({ meldEnabled: v })} />
             <Row label="Bonus" value={settings.bonusEnabled} onValueChange={(v) => onUpdateSettings({ bonusEnabled: v })} />
-          </Section>
 
-          <Section title="Custom Fields">
+            <Text style={styles.subLabel}>Custom Fields</Text>
             {(settings.customFields ?? []).map((label, i) => (
               <View key={i} style={styles.customFieldRow}>
                 <TextInput
@@ -181,12 +264,12 @@ export default function SettingsModal({
             ))}
             {(settings.customFields ?? []).length < 3 && (
               <Pressable onPress={addCustomField} style={styles.randomizeButton}>
-                <Text style={styles.randomizeButtonText}>+ Add Field</Text>
+                <Text style={styles.randomizeButtonText}>+ Add Custom Field</Text>
               </Pressable>
             )}
           </Section>
 
-          <Section title="Options">
+          <Section title="Display Options">
             <Row label="Roman numeral rounds" value={settings.useRomanNumerals} onValueChange={(v) => onUpdateSettings({ useRomanNumerals: v })} />
             <Row label="Show Round Wins" value={settings.showRoundWinner} onValueChange={(v) => onUpdateSettings({ showRoundWinner: v })} />
             <Row label="Highlight Round Winners" value={settings.highlightRoundWinner} onValueChange={(v) => onUpdateSettings({ highlightRoundWinner: v })} />
@@ -258,7 +341,7 @@ export default function SettingsModal({
                   />
                 </View>
 
-                <Row label="15 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => onUpdateSettings({ timerWarningEnabled: v })} />
+                <Row label="10 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => onUpdateSettings({ timerWarningEnabled: v })} />
 
                 <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Completion Sound</Text>
                 <ChipPicker
@@ -295,7 +378,9 @@ export default function SettingsModal({
               </View>
             ) : (
               <Pressable onPress={() => setShowPresetInput(true)} style={styles.randomizeButton}>
-                <Text style={styles.randomizeButtonText}>Save Current Settings as Preset</Text>
+                <Text style={styles.randomizeButtonText}>
+                  {linkedPreset ? 'Save Current Settings as New Preset' : 'Save Current Settings as Preset'}
+                </Text>
               </Pressable>
             )}
           </Section>
@@ -362,7 +447,16 @@ const styles = StyleSheet.create({
   doneText: { fontSize: 16, color: '#155843', fontWeight: '600' },
   content: { paddingHorizontal: 20, paddingBottom: 60 },
   section: { marginTop: 24 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#000', textTransform: 'uppercase', marginBottom: 10, fontFamily: 'FuzzyBubblesBold' },
+  subLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginTop: 10, marginBottom: 8 },
+  presetLinkBlock: { marginBottom: 20 },
+  presetIndicatorRow: { flexDirection: 'row', alignItems: 'center' },
+  presetIndicatorIcon: { marginRight: 6 },
+  presetIndicatorText: { fontSize: 14, fontWeight: '700', color: '#155843' },
+  applyPresetButton: { marginTop: 10, alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#155843' },
+  applyPresetButtonDisabled: { backgroundColor: '#ccc' },
+  applyPresetButtonText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  applyPresetButtonTextDisabled: { color: '#f2f2f2' },
   textInput: { borderBottomWidth: 1, borderColor: '#ddd', paddingVertical: 8, fontSize: 16 },
   playerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   playerInput: { flex: 1 },

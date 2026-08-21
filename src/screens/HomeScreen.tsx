@@ -103,6 +103,14 @@ export default function HomeScreen({ navigation }: Props) {
   const sortedPresets = useMemo(() => sortPresets(presets, sortMode), [presets, sortMode]);
   const recentPresets = sortedPresets.slice(0, MAX_RECENT_PRESETS);
 
+  const presetNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    presets.forEach((p) => {
+      map[p.id] = p.name;
+    });
+    return map;
+  }, [presets]);
+
   const createNewScorecard = async () => {
     if (!isUnlocked && scorecards.length >= 1) {
       navigation.navigate('Paywall');
@@ -294,6 +302,7 @@ return (
         renderItem={({ item }: { item: Scorecard }) => (
           <ScorecardListItem
             card={item}
+            presetName={item.presetId ? presetNameById[item.presetId] : undefined}
             onPress={() => navigation.navigate('Scorecard', { scorecardId: item.id })}
             onDelete={() => handleDelete(item.id)}
           />
@@ -346,7 +355,7 @@ return (
             setManageDataVisible(true);
           }}
         />
-     
+
         <SheetOption label="Privacy Policy" onPress={openPrivacyPolicy} />
         <SheetOption label="Terms of Use" onPress={openTermsOfUse} last />
       </BottomSheetModal>

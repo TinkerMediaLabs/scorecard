@@ -36,6 +36,8 @@ type Props = {
   rounds: Round[];
   showRoundWinner: boolean;
   theme: ThemePalette;
+  gameName: string;
+  finishedAt: string;
 };
 
 export default function FinishSummaryModal({
@@ -49,6 +51,8 @@ export default function FinishSummaryModal({
   rounds,
   showRoundWinner,
   theme,
+  gameName,
+  finishedAt,
 }: Props) {
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(CARD_OFFSCREEN_Y);
@@ -153,7 +157,9 @@ export default function FinishSummaryModal({
   ];
 
   const bestRoundLabel = bestRoundScore ? `${bestRoundScore.value} (${bestRoundScore.playerName})` : '—';
-  const dateLabel = new Date().toLocaleDateString();
+  // Use the scorecard's actual finish timestamp rather than "now" — otherwise re-opening a
+  // finished scorecard's recap days later would show today's date instead of when it was played.
+  const dateLabel = new Date(finishedAt).toLocaleDateString();
 
   const handleShare = async () => {
     if (sharing) return;
@@ -307,6 +313,8 @@ export default function FinishSummaryModal({
               roundsPlayed={roundsPlayed}
               bestRoundLabel={bestRoundLabel}
               dateLabel={dateLabel}
+              gameName={gameName}
+              theme={theme}
             />
           </View>
 

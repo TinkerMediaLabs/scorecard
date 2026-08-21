@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,9 +17,9 @@ import ScorecardGrid from '../components/ScorecardGrid';
 import SettingsModal from '../components/SettingsModal';
 import { useTour } from '../contexts/TourContext';
 
-import { loadScorecard, recordPresetGameResult, savePreset, saveScorecard } from '../lib/storage';
+import { getPreset, loadScorecard, recordPresetGameResult, savePreset, saveScorecard } from '../lib/storage';
 import { THEMES } from '../lib/themes';
-import { DEFAULT_PRESET_STATS, Scorecard } from '../types';
+import { DEFAULT_PRESET_STATS, Preset, Scorecard } from '../types';
 
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
@@ -27,6 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Scorecard'>;
 export default function ScorecardScreen({ route, navigation }: Props) {
   const { scorecardId } = route.params;
   const [card, setCard] = useState<Scorecard | null>(null);
+  const [linkedPreset, setLinkedPreset] = useState<Preset | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [confirmFinishVisible, setConfirmFinishVisible] = useState(false);
@@ -41,6 +42,14 @@ export default function ScorecardScreen({ route, navigation }: Props) {
       loadScorecard(scorecardId).then(setCard);
     }, [scorecardId])
   );
+
+  useEffect(() => {
+    if (card?.presetId) {
+      getPreset(card.presetId).then(setLinkedPreset);
+    } else {
+      setLinkedPreset(null);
+    }
+  }, [card?.presetId]);
 
   if (!card) {
     return (
@@ -177,6 +186,13 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
       stats: DEFAULT_PRESET_STATS,
     });
     Alert.alert('Preset Saved', `"${name}" is now available from the Home screen.`);
+  };
+
+  const handleApplyChangesToPreset = async (settingsSnapshot: Scorecard['settings']) => {
+    if (!linkedPreset) return;
+    const updated: Preset = { ...linkedPreset, settings: settingsSnapshot };
+    await savePreset(updated);
+    setLinkedPreset(updated);
   };
 
   const handleShufflePlayers = () => {
@@ -385,6 +401,8 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
         settings={card.settings}
         onUpdateSettings={handleUpdateSettings}
         onSaveAsPreset={handleSaveAsPreset}
+        linkedPreset={linkedPreset}
+        onApplyChangesToPreset={handleApplyChangesToPreset}
       />
 
       <ConfirmModal
@@ -411,6 +429,8 @@ const handleSaveAsPreset = async (name: string, settingsSnapshot: Scorecard['set
           rounds={card.rounds}
           showRoundWinner={card.settings.showRoundWinner}
           theme={theme}
+          gameName={card.name}
+          finishedAt={card.updatedAt}
         />
       )}
     </View>

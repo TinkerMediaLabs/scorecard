@@ -169,9 +169,8 @@ export default function PresetEditorModal({
             <Row label="Bid" value={settings.bidEnabled} onValueChange={(v) => updateSettings({ bidEnabled: v })} />
             <Row label="Meld" value={settings.meldEnabled} onValueChange={(v) => updateSettings({ meldEnabled: v })} />
             <Row label="Bonus" value={settings.bonusEnabled} onValueChange={(v) => updateSettings({ bonusEnabled: v })} />
-          </Section>
 
-          <Section title="Custom Fields">
+            <Text style={styles.subLabel}>Custom Fields</Text>
             {(settings.customFields ?? []).map((label, i) => (
               <View key={i} style={styles.customFieldRow}>
                 <TextInput
@@ -264,7 +263,7 @@ export default function PresetEditorModal({
                   />
                 </View>
 
-                <Row label="15 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => updateSettings({ timerWarningEnabled: v })} />
+                <Row label="10 Second Warning" value={settings.timerWarningEnabled} onValueChange={(v) => updateSettings({ timerWarningEnabled: v })} />
 
                 <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Completion Sound</Text>
                 <ChipPicker
@@ -348,6 +347,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 60 },
   section: { marginTop: 24 },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
+  subLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginTop: 10, marginBottom: 8 },
   textInput: { borderBottomWidth: 1, borderColor: '#ddd', paddingVertical: 8, fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
   rowLabel: { fontSize: 16 },
