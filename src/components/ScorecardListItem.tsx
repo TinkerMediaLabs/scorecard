@@ -25,7 +25,7 @@ export default function ScorecardListItem({ card, onPress, onDelete }: Props) {
   };
 
   const actions: SwipeAction[] = [
-    { key: 'delete', label: 'Delete', icon: 'trash', color: '#dc3545', onPress: confirmDelete },
+    { key: 'delete', label: 'Delete', icon: 'trash', color: '#B94A48', onPress: confirmDelete },
   ];
 
   return (

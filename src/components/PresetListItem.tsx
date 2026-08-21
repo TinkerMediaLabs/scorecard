@@ -27,10 +27,10 @@ export default function PresetListItem({ preset, onPress, onEdit, onDelete, onVi
   };
 
   const actions: SwipeAction[] = [
-    { key: 'delete', label: 'Delete', icon: 'trash', color: '#981321', onPress: confirmDelete },
-    { key: 'edit', label: 'Edit', icon: 'pencil', color: '#6c757d', onPress: onEdit },
-    { key: 'stats', label: 'Statistics', icon: 'trophy', color: '#cf8918', onPress: onViewStats },
-    { key: 'new', label: 'New Card', icon: 'plus-circle', color: '#14872f', onPress: onPress },
+    { key: 'delete', label: 'Delete', icon: 'trash', color: '#B94A48', onPress: confirmDelete },
+    { key: 'edit', label: 'Edit', icon: 'pencil', color: '#6B7280', onPress: onEdit },
+    { key: 'stats', label: 'Statistics', icon: 'trophy', color: '#C49A3A', onPress: onViewStats },
+    { key: 'new', label: 'New Card', icon: 'plus-circle', color: '#2F7D5B', onPress: onPress },
   ];
 
   return (

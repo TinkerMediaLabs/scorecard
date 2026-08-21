@@ -1,8 +1,9 @@
+import { FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -20,9 +21,11 @@ import Coachmark from '../components/Coachmark';
 import ConfirmModal, { APP_PALETTE } from '../components/ConfirmModal';
 import PresetEditorModal from '../components/PresetEditorModal';
 import PresetListItem from '../components/PresetListItem';
+import PresetSortMenu from '../components/PresetSortMenu';
 import ScorecardListItem from '../components/ScorecardListItem';
 import { usePurchases } from '../contexts/PurchasesContext';
 import { useTour } from '../contexts/TourContext';
+import { PresetSortMode, sortPresets } from '../lib/presetSort';
 import {
   clearAllData,
   clearHistory,
@@ -41,6 +44,11 @@ const MAX_RECENT_PRESETS = 4;
 const HEADER_ROW_HEIGHT = 36;
 const HEADER_COLLAPSE_DISTANCE = 60;
 
+const SORT_LABELS: Record<PresetSortMode, string> = {
+  mostRecent: 'Most Recent',
+  mostPlayed: 'Most Played',
+};
+
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList as new () => FlatList<Scorecard>);
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -48,6 +56,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export default function HomeScreen({ navigation }: Props) {
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
+  const [sortMode, setSortMode] = useState<PresetSortMode>('mostRecent');
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -59,6 +69,7 @@ export default function HomeScreen({ navigation }: Props) {
   const { isUnlocked } = usePurchases();
   const newScorecardRef = useRef<View>(null);
   const newPresetRef = useRef<View>(null);
+  const sortButtonRef = useRef<View>(null);
   const scrollY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -80,9 +91,7 @@ export default function HomeScreen({ navigation }: Props) {
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
       setScorecards(active);
     });
-    listPresets().then((all) =>
-      setPresets([...all].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
-    );
+    listPresets().then(setPresets);
   }, []);
 
   useFocusEffect(
@@ -90,6 +99,9 @@ export default function HomeScreen({ navigation }: Props) {
       reload();
     }, [reload])
   );
+
+  const sortedPresets = useMemo(() => sortPresets(presets, sortMode), [presets, sortMode]);
+  const recentPresets = sortedPresets.slice(0, MAX_RECENT_PRESETS);
 
   const createNewScorecard = async () => {
     if (!isUnlocked && scorecards.length >= 1) {
@@ -144,6 +156,7 @@ const handleSavePreset = async ({
     settings: ScorecardSettings;
     players: Preset['players'];
   }) => {
+    const isNewPreset = !editingPreset;
     const preset: Preset = {
       id: editingPreset?.id ?? Crypto.randomUUID(),
       name,
@@ -156,6 +169,9 @@ const handleSavePreset = async ({
     setEditorVisible(false);
     setEditingPreset(null);
     reload();
+    if (isNewPreset) {
+      setSortMode('mostRecent');
+    }
   };
 
   const handleDeletePreset = async (id: string) => {
@@ -198,8 +214,6 @@ const handleSavePreset = async ({
     WebBrowser.openBrowserAsync(TERMS_OF_USE_URL);
   };
 
-  const recentPresets = presets.slice(0, MAX_RECENT_PRESETS);
-
 return (
     <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
       <Animated.View style={[styles.headerRow, headerAnimatedStyle]}>
@@ -227,9 +241,12 @@ return (
             <View style={styles.presetsSection}>
               <View style={styles.presetsHeaderRow}>
                 <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Preset Scorecards</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('AllPresets')} hitSlop={8}>
-                  <Text style={styles.viewAllLink}>View All</Text>
-                </TouchableOpacity>
+                <View ref={sortButtonRef} collapsable={false}>
+                  <TouchableOpacity onPress={() => setSortMenuVisible(true)} hitSlop={8} style={styles.sortTrigger}>
+                    <Text style={styles.sortTriggerText}>{SORT_LABELS[sortMode]}</Text>
+                    <FontAwesome name="sort" size={13} color="#155843" style={styles.sortTriggerIcon} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {recentPresets.length === 0 ? (
@@ -293,6 +310,15 @@ return (
         initialName={editingPreset?.name}
         initialSettings={editingPreset?.settings}
         initialPlayers={editingPreset?.players}
+      />
+
+      <PresetSortMenu
+        visible={sortMenuVisible}
+        onClose={() => setSortMenuVisible(false)}
+        anchorRef={sortButtonRef}
+        sortMode={sortMode}
+        onSelectSort={setSortMode}
+        onViewAll={() => navigation.navigate('AllPresets')}
       />
 
       <BottomSheetModal visible={menuVisible} onClose={() => setMenuVisible(false)}>
@@ -419,8 +445,10 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
   presetsSection: { marginBottom: 24 },
   presetsHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 20 },
+  sortTrigger: { flexDirection: 'row', alignItems: 'center' },
+  sortTriggerText: { fontSize: 14, fontWeight: '600', color: '#155843' },
+  sortTriggerIcon: { marginLeft: 6 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1a1a1a', marginBottom: 10 },
-  viewAllLink: { fontSize: 14, fontWeight: '600', color: '#155843' },
   presetsEmpty: { fontSize: 13, color: '#888', marginTop: 16, marginBottom: 24 },
   newPresetTile: {
     borderWidth: 1.5,
@@ -435,7 +463,7 @@ const styles = StyleSheet.create({
   newPresetTileText: { fontSize: 15, fontWeight: '600', color: '#155843' },
   sheetOption: { paddingVertical: 16, borderBottomWidth: 1, borderColor: '#eee' },
   sheetOptionLast: { borderBottomWidth: 0 },
-  sheetOptionText: { fontSize: 16, fontWeight: '600', color: '#155843', textAlign: 'center' },
+  sheetOptionText: { fontSize: 16, fontWeight: '600', color: '#000', textAlign: 'center' },
   sheetOptionTextDestructive: { color: '#c0392b' },
   footer: { height: 100 },
 });

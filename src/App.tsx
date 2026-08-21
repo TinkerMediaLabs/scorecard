@@ -60,7 +60,15 @@ useEffect(() => {
                 <Stack.Screen name="History" component={HistoryScreen} />
                 <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
                 <Stack.Screen name="AllPresets" component={AllPresetsScreen} />
-                <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
+                <Stack.Screen
+                  name="Paywall"
+                  component={PaywallScreen}
+                  options={{
+                    presentation: 'transparentModal',
+                    animation: 'slide_from_bottom',
+                    contentStyle: { backgroundColor: 'transparent' },
+                  }}
+                />
               </Stack.Navigator>
             </NavigationContainer>
           </TourProvider>

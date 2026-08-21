@@ -1,7 +1,9 @@
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../App';
@@ -11,31 +13,14 @@ import { getLifetimeUnlockPriceString } from '../lib/purchases';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
 
-const BENEFITS: {
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
-  title: string;
-  description: string;
-}[] = [
-  {
-    icon: 'check',
-    title: 'Unlimited active scorecards',
-    description: '',
-  },
-  {
-    icon: 'check',
-    title: 'Unlimited preset scorecards',
-    description: '',
-  },
-  {
-    icon: 'check',
-    title: 'Apply scorecard themes',
-    description: "",
-  },
-  {
-    icon: 'check',
-    title: 'Includes all future updates',
-    description: '',
-  },
+const { height: SCREEN_H } = Dimensions.get('window');
+const DISMISS_THRESHOLD = 120;
+
+const BENEFITS: string[] = [
+  'Unlimited active scorecards',
+  'Unlimited saved preset scorecards',
+  'Access to scorecard themes',
+  'Includes all future updates',
 ];
 
 export default function PaywallScreen({ navigation }: Props) {
@@ -43,6 +28,7 @@ export default function PaywallScreen({ navigation }: Props) {
   const { isUnlocked, purchase, restore } = usePurchases();
   const [priceString, setPriceString] = useState<string | null>(null);
   const [busy, setBusy] = useState<'purchase' | 'restore' | null>(null);
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
     getLifetimeUnlockPriceString().then(setPriceString);
@@ -53,6 +39,31 @@ export default function PaywallScreen({ navigation }: Props) {
       navigation.goBack();
     }
   }, [isUnlocked]);
+
+  const dismiss = () => {
+    if (busy !== null) return;
+    navigation.goBack();
+  };
+
+  const pan = Gesture.Pan()
+    .onUpdate((e) => {
+      if (e.translationY > 0) {
+        translateY.value = e.translationY;
+      }
+    })
+    .onEnd((e) => {
+      if (e.translationY > DISMISS_THRESHOLD) {
+        translateY.value = withTiming(SCREEN_H, { duration: 200 }, (finished) => {
+          if (finished) runOnJS(navigation.goBack)();
+        });
+      } else {
+        translateY.value = withTiming(0, { duration: 200 });
+      }
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
   const handlePurchase = async () => {
     setBusy('purchase');
@@ -76,57 +87,34 @@ export default function PaywallScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Pressable onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-         <MaterialCommunityIcons name="arrow-left" size={24} style={styles.arrow} />
-        </Pressable>
-      </View>
+    <View style={styles.backdrop}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* <View style={styles.iconCircle}>
-          <FontAwesome name="unlock-alt" size={44} color="#155843" />
-        </View> */}
+      <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + 20 }, sheetStyle]}>
+        <GestureDetector gesture={pan}>
+          <View style={styles.dragHandleArea}>
+            <View style={styles.dragHandle} />
+          </View>
+        </GestureDetector>
 
-        <Text style={styles.title}>Unlock Everything
-          {/* <Text style={styles.titleAccent}>Unlimited scorecards</Text> */}
-          {/* <Text style={styles.titleBlack}> Everything for </Text> */}
-          {/* <Text style={styles.titleAccent}>{priceString ? ` – ${priceString}` : '$1.99'}</Text> */}
-          
-        </Text>
-        <Text style={styles.titleAccent}>{priceString ? ` – ${priceString}` : '$1.99'}</Text>
-        
-        {/* <Text style={styles.subtitle}>
-          Access to unlimited scorecards.
-        </Text> */}
+        <Text style={styles.title}>Upgrade to Pro</Text>
+        <Text style={[styles.priceCaption, { textAlign: 'center' }]}>The free version of the app has limitations. Upgrade to Pro for unlimited scorecards and exclusive features.</Text>
 
-        <View style={styles.card}>
-          {BENEFITS.map((benefit, i) => (
-            <View key={benefit.title}>
-              <View style={styles.benefitRow}>
-                {/* <View style={styles.benefitIconCircle}>
-                  <FontAwesome name={benefit.icon} size={20} color="#155843" />
-                </View> */}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.benefitTitle}>{benefit.title}</Text>
-                  {/* <Text style={styles.benefitDescription}>{benefit.description}</Text> */}
-                </View>
-              </View>
-              {i < BENEFITS.length - 1 && <View style={styles.divider} />}
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{priceString ?? '$1.99'}</Text>
+          <Text style={styles.priceCaption}>Lifetime deal</Text>
+        </View>
+
+        <Text style={styles.benefitsLabel}>What you get</Text>
+        <View style={styles.benefitsList}>
+          {BENEFITS.map((benefit) => (
+            <View key={benefit} style={styles.benefitRow}>
+              <FontAwesome name="check" size={13} color="#155843" style={styles.benefitCheck} />
+              <Text style={styles.benefitText}>{benefit}</Text>
             </View>
           ))}
         </View>
 
-         <Pressable onPress={handleRestore} disabled={busy !== null} style={styles.restoreButton}>
-          {busy === 'restore' ? (
-            <ActivityIndicator color="#155843" />
-          ) : (
-            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
-          )}
-        </Pressable>
-      </ScrollView>
-
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <Pressable
           onPress={handlePurchase}
           disabled={busy !== null}
@@ -135,100 +123,63 @@ export default function PaywallScreen({ navigation }: Props) {
           {busy === 'purchase' ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <View style={styles.purchaseButtonContent}>
-              <FontAwesome name="unlock" size={18} color="#fff" style={{ marginRight: 10 }} />
-              <Text style={styles.purchaseButtonText}>
-                Unlock Everything{priceString ? ` – ${priceString}` : ''}
-              </Text>
-            </View>
+            <Text style={styles.purchaseButtonText}>Upgrade to Pro</Text>
           )}
         </Pressable>
 
-        <View style={styles.secureRow}>
-          <MaterialCommunityIcons name="shield-check-outline" size={16} color="#666" style={{ marginRight: 6 }} />
-          <Text style={styles.secureText}>Secure one-time purchase</Text>
-        </View>
-
-        {/* <Pressable onPress={handleRestore} disabled={busy !== null} style={styles.restoreButton}>
+        <Pressable onPress={handleRestore} disabled={busy !== null} style={styles.restoreButton}>
           {busy === 'restore' ? (
             <ActivityIndicator color="#155843" />
           ) : (
             <Text style={styles.restoreButtonText}>Restore Purchases</Text>
           )}
-        </Pressable> */}
-      </View>
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20 },
-  backArrow: { fontSize: 22, color: '#155843', fontWeight: '700' },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24, alignItems: 'center' },
-  iconCircle: {
-    width: 92,
-    height: 92,
-    borderRadius: 54,
-    //backgroundColor: '#e6f2ee',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  title: { fontSize: 32, fontWeight: '800', marginBottom: 14, textAlign: 'center' },
-  titleAccent: { color: '#155843', fontSize: 42, fontWeight: '800', marginBottom: 14, textAlign: 'center' },
-  titleBlack: { color: '#000' },
-  subtitle: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24, marginTop: 16 },
-  card: {
-    width: '100%',
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  sheet: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  benefitRow: {  alignItems: 'center' },
-  benefitIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  benefitTitle: { fontSize: 15, fontWeight: '700', color: '#111', marginVertical: 10 },
-  benefitDescription: { fontSize: 13, color: '#777', marginTop: 2 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 14 },
-  footer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: 24,
-    paddingTop: 16,
-    //borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff',
   },
+  dragHandleArea: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e0e0e0',
+  },
+  title: { fontSize: 24, fontWeight: '800', color: '#111', textAlign: 'center', marginBottom: 4 },
+  priceRow: { alignItems: 'center', marginBottom: 22 },
+  price: { fontSize: 34, fontWeight: '800', color: '#155843' },
+  priceCaption: { fontSize: 13, color: '#888', fontWeight: '600', marginTop: 2 },
+  benefitsLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#000',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  benefitsList: { marginBottom: 24 },
+  benefitRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
+  benefitCheck: { width: 20 },
+  benefitText: { fontSize: 15, color: '#222', fontWeight: '500' },
   purchaseButton: {
     width: '100%',
     backgroundColor: '#155843',
     borderRadius: 14,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#155843',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 10,
   },
-  purchaseButtonContent: { flexDirection: 'row', alignItems: 'center' },
   buttonDisabled: { opacity: 0.6 },
   purchaseButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  secureRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  secureText: { fontSize: 13, color: '#666' },
-  restoreButton: { paddingVertical: 20, alignItems: 'center' },
-  restoreButtonText: { color: '#155843', fontSize: 14, fontWeight: '600' },
-    arrow: {marginRight: 10},
+  restoreButton: { paddingVertical: 8, alignItems: 'center' },
+  restoreButtonText: { color: '#155843', fontSize: 13, fontWeight: '600' },
 });
