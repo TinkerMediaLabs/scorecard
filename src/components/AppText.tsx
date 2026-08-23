@@ -16,5 +16,5 @@ export default function Text({ style, ...props }: TextProps) {
   const { fontWeight, ...rest } = flattened;
   const fontFamily = resolveFontFamily(fontWeight);
 
-  return <RNText style={[{ fontFamily }, rest]} {...props} />;
+  return <RNText allowFontScaling={false} style={[{ fontFamily }, rest]} {...props} />;
 }

@@ -153,7 +153,7 @@ export default function PresetEditorModal({
           <Section title="Players">
             {players.map((p) => (
               <View key={p.id} style={styles.playerRow}>
-                <TextInput
+                <PlayerNameInput
                   value={p.name}
                   onChangeText={(text) => renamePlayer(p.id, text)}
                   style={[styles.textInput, styles.playerInput]}
@@ -297,7 +297,6 @@ export default function PresetEditorModal({
               </>
             )}
           </Section>
-          <View style={{height: 100}}/> 
         </ScrollView>
       </View>
     </Modal>
@@ -353,6 +352,40 @@ function ChipPicker<T extends string>({
   );
 }
 
+// Newly created players default to a generic name ("Player 1", "Player 2", etc). Rather
+// than making the user delete that placeholder-ish text before typing their own, we blank
+// the field the moment it's focused (while it's still untouched) so typing starts fresh
+// immediately — but the underlying value stays as the default the whole time unless the
+// user actually types something, so walking away without typing still leaves a sensible
+// name. This checks the generic "Player N" pattern rather than just "Player 1", so it
+// applies to any still-default slot (Player 2, Player 3, ...), not only the first. Once a
+// player has been renamed to anything else, this is a no-op and the field behaves like a
+// normal text input.
+function PlayerNameInput({
+  value,
+  onChangeText,
+  style,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  style?: any;
+}) {
+  const [focused, setFocused] = useState(false);
+  const isPristineDefault = /^Player \d+$/.test(value);
+  const showEmpty = focused && isPristineDefault;
+
+  return (
+    <TextInput
+      value={showEmpty ? '' : value}
+      onChangeText={onChangeText}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      placeholder={isPristineDefault ? value : undefined}
+      style={style}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingTop: 60 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 10 },
@@ -361,7 +394,7 @@ const styles = StyleSheet.create({
   saveText: { fontSize: 16, color: '#155843', fontWeight: '600' },
   content: { paddingHorizontal: 20, paddingBottom: 60 },
   section: { marginTop: 24 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#000', textTransform: 'uppercase', marginBottom: 10, fontFamily: 'FuzzyBubblesBold' },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 10 },
   subLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginTop: 10, marginBottom: 8 },
   textInput: { borderBottomWidth: 1, borderColor: '#ddd', paddingVertical: 8, fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
