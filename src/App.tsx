@@ -35,10 +35,7 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     FuzzyBubblesRegular: require('../assets/fonts/fuzzy-bubbles-regular.ttf'),
     FuzzyBubblesBold: require('../assets/fonts/fuzzy-bubbles-bold.ttf'),
-    SilkscreenRegular: require('../assets/fonts/Silkscreen-Regular.ttf'),
-    SilkscreenBold: require('../assets/fonts/Silkscreen-Bold.ttf'),
-    SpaceMonoRegular: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    SpaceMonoBold: require('../assets/fonts/SpaceMono-Bold.ttf'),
+    PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
   });
 
 useEffect(() => {
@@ -46,6 +43,22 @@ useEffect(() => {
     SplashScreen.hideAsync();
   }
 }, [fontsLoaded]);
+
+  // Don't mount any of the app's screens until the custom fonts have actually finished
+  // loading. Previously the full tree rendered unconditionally and relied on the native
+  // splash screen to visually hide things until `fontsLoaded` flipped true — but React
+  // doesn't wait for the splash overlay: every Text node still ran its *first* layout pass
+  // immediately on mount, which (on some devices) landed before iOS had finished
+  // registering the custom font with CoreText. Those Text nodes got measured/rendered with
+  // the system fallback font and, unless something happened to force them to re-render
+  // later, stayed stuck that way — which is why it only ever affected some labels, was
+  // worse on certain iPhones, and why a few labels would "fix themselves" the moment some
+  // unrelated state change forced a re-render. Returning null here means nothing mounts
+  // until fonts are guaranteed ready, so no Text node ever gets a first pass with the
+  // wrong font.
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -60,15 +73,7 @@ useEffect(() => {
                 <Stack.Screen name="History" component={HistoryScreen} />
                 <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
                 <Stack.Screen name="AllPresets" component={AllPresetsScreen} />
-                <Stack.Screen
-                  name="Paywall"
-                  component={PaywallScreen}
-                  options={{
-                    presentation: 'transparentModal',
-                    animation: 'slide_from_bottom',
-                    contentStyle: { backgroundColor: 'transparent' },
-                  }}
-                />
+                <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
               </Stack.Navigator>
             </NavigationContainer>
           </TourProvider>
