@@ -35,7 +35,10 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     FuzzyBubblesRegular: require('../assets/fonts/fuzzy-bubbles-regular.ttf'),
     FuzzyBubblesBold: require('../assets/fonts/fuzzy-bubbles-bold.ttf'),
-    PressStart2P: require('../assets/fonts/press-start-2p-regular.ttf'),
+    SilkscreenRegular: require('../assets/fonts/Silkscreen-Regular.ttf'),
+    SilkscreenBold: require('../assets/fonts/Silkscreen-Bold.ttf'),
+    SpaceMonoRegular: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMonoBold: require('../assets/fonts/SpaceMono-Bold.ttf'),
   });
 
 useEffect(() => {
@@ -73,7 +76,15 @@ useEffect(() => {
                 <Stack.Screen name="History" component={HistoryScreen} />
                 <Stack.Screen name="PresetStats" component={PresetStatsScreen} />
                 <Stack.Screen name="AllPresets" component={AllPresetsScreen} />
-                <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
+                <Stack.Screen
+                  name="Paywall"
+                  component={PaywallScreen}
+                  options={{
+                    presentation: 'transparentModal',
+                    animation: 'slide_from_bottom',
+                    contentStyle: { backgroundColor: 'transparent' },
+                  }}
+                />
               </Stack.Navigator>
             </NavigationContainer>
           </TourProvider>
