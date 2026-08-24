@@ -1,4 +1,4 @@
-import { FontAwesome } from '@expo/vector-icons';
+import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -227,7 +227,8 @@ return (
       <Animated.View style={[styles.headerRow, headerAnimatedStyle]}>
         <Text style={[styles.title, {fontSize: 22}]}>Let's Play!</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)} hitSlop={10}>
-          <Text style={[styles.menuIcon]}>Options</Text>
+          <AntDesign name="menu" size={20} color="#000" style={styles.menuIcon} />
+          {/* <Text style={[styles.menuIcon]}>Options</Text> */}
         </TouchableOpacity>
       </Animated.View>
 
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#fff' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },
   title: { fontSize: 28, fontWeight: '700' },
-  menuIcon: { fontSize: 16, fontWeight: '700', color: '#666666', paddingHorizontal: 8, letterSpacing: 1 },
+  menuIcon: { paddingHorizontal: 8},
   newButton: { backgroundColor: '#155843', borderRadius: 12, paddingVertical: 18, alignItems: 'center', marginBottom: 16},
   newButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   list: { paddingBottom: 20 },

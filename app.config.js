@@ -30,10 +30,10 @@ module.exports = {
     android: {
       package: BUNDLE_ID,
       adaptiveIcon: {
-        backgroundColor: '#E6F4FE',
-        foregroundImage: './assets/images/icon.png',
-        backgroundImage: './assets/images/icon.png',
-        monochromeImage: './assets/images/icon.png',
+        backgroundColor: '#1d735a',
+        backgroundImage: './assets/images/icon-adaptive-background.png',
+        foregroundImage: './assets/images/icon-adaptive-foreground.png',
+        monochromeImage: './assets/images/icon-adaptive-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
     },
@@ -42,13 +42,13 @@ module.exports = {
       favicon: './assets/images/icon.png',
     },
     plugins: [
-       "expo-audio",
-       "expo-font",
+      "expo-audio",
+      "expo-font",
       [
         'expo-splash-screen',
         {
           backgroundColor: '#fff',
-          image: './assets/images/icon.png',
+          image: './assets/images/splash-icon.png',
           imageWidth: 76,
         },
       ],
