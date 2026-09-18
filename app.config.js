@@ -16,7 +16,7 @@ module.exports = {
   expo: {
     name: APP_NAME,
     slug: 'scorecard',
-    version: '1.1.0',
+    version: '1.1.1',
     orientation: 'default',
     icon: './assets/images/icon.png',
     scheme: 'scorecard',
